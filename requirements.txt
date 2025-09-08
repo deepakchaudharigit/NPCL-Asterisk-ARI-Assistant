@@ -1,0 +1,51 @@
+<<<<<<< HEAD
+# Voice Assistant with Gemini 2.5 Flash - Professional Version
+# Core dependencies for the voice assistant
+
+# AI and ML - Gemini Integration
+google-generativeai>=0.8.0
+
+# Audio processing
+gtts>=2.4.0
+pydub>=0.25.1
+SpeechRecognition>=3.10.0
+
+# Web framework (for ARI integration)
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# Configuration and utilities
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+pydantic-settings>=2.0.0
+requests>=2.31.0
+
+# Audio enhancements (optional)
+# pyaudio>=0.2.11  # For better microphone support (may need special installation on Windows)
+# sounddevice>=0.4.6  # Alternative audio library
+# soundfile>=0.12.1  # Audio file support
+
+# Development and testing
+pytest>=7.4.0
+black>=23.0.0
+flake8>=6.0.0
+
+# Note: For Windows users having trouble with pyaudio:
+# pip install pipwin
+# pipwin install pyaudio
+=======
+fastapi
+uvicorn
+python-dotenv
+requests
+openai
+gtts
+whisper
+pydantic
+pydub 
+sounddevice 
+scipy 
+SpeechRecognition
+pipwin
+pyaudio
+>>>>>>> 978c090094b55f79e8769e28b18536e68993dd09

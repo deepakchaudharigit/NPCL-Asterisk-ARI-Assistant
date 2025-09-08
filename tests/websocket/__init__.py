@@ -1,0 +1,1 @@
+"""WebSocket communication tests for real-time audio streaming."""
