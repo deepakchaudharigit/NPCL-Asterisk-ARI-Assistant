@@ -143,6 +143,7 @@ voice_assistant_ari_llm/
 5. **Test Installation**:
    ```bash
    python src/main.py
+   pytest -v [for all testcases]
    ```
 
 ## 🎮 Usage
