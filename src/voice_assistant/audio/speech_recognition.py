@@ -33,11 +33,17 @@ class SpeechRecognizer:
             self.microphone = sr.Microphone()
             logger.info("Microphone detected successfully")
             
+            # Improve recognition settings
+            self.recognizer.energy_threshold = 300  # Adjust based on environment
+            self.recognizer.dynamic_energy_threshold = True
+            self.recognizer.pause_threshold = 0.8  # Seconds of silence before considering phrase complete
+            self.recognizer.phrase_threshold = 0.3  # Minimum seconds of speaking audio
+            
             # Calibrate for ambient noise
             logger.info("Calibrating microphone for ambient noise...")
             with self.microphone as source:
                 self.recognizer.adjust_for_ambient_noise(source, duration=2)
-            logger.info("Microphone calibration completed")
+            logger.info(f"Microphone calibration completed (energy threshold: {self.recognizer.energy_threshold})")
             
         except Exception as e:
             logger.error(f"Microphone setup failed: {e}")
@@ -66,11 +72,38 @@ class SpeechRecognizer:
             
             logger.debug("Processing speech...")
             
-            # Recognize speech using Google Speech Recognition
-            text = self.recognizer.recognize_google(audio)
-            logger.info(f"Speech recognized: {text}")
+            # Try multiple recognition methods for better reliability
+            text = None
             
-            return True, text, None
+            # Try Google Speech Recognition first
+            try:
+                text = self.recognizer.recognize_google(
+                    audio, 
+                    language=self.settings.voice_language
+                )
+                logger.info(f"Google Speech Recognition: {text}")
+                
+            except sr.UnknownValueError:
+                # Try alternative recognition if available
+                try:
+                    text = self.recognizer.recognize_sphinx(audio)
+                    logger.info(f"Sphinx Recognition (fallback): {text}")
+                except:
+                    pass
+            
+            except sr.RequestError as e:
+                logger.warning(f"Google Speech Recognition service error: {e}")
+                # Try offline recognition as fallback
+                try:
+                    text = self.recognizer.recognize_sphinx(audio)
+                    logger.info(f"Sphinx Recognition (offline fallback): {text}")
+                except:
+                    pass
+            
+            if text:
+                return True, text.strip(), None
+            else:
+                return False, None, "Could not understand speech with any recognition method"
             
         except sr.WaitTimeoutError:
             error_msg = f"No speech detected in {self.settings.listen_timeout} seconds"

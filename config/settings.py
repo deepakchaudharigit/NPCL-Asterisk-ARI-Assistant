@@ -48,6 +48,10 @@ class VoiceAssistantSettings(BaseSettings):
     gemini_model: str = Field(default="gemini-2.5-flash", validation_alias=AliasChoices("GEMINI_MODEL"))
     gemini_live_model: str = Field(default="gemini-2.0-flash-exp", validation_alias=AliasChoices("GEMINI_LIVE_MODEL"))
     gemini_voice: str = Field(default="Puck", validation_alias=AliasChoices("GEMINI_VOICE"))  # Puck, Charon, Kore, Fenrir
+    gemini_live_api_endpoint: str = Field(
+        default="wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent",
+        validation_alias=AliasChoices("GEMINI_LIVE_API_ENDPOINT")
+    )
     max_tokens: int = Field(default=150, validation_alias=AliasChoices("MAX_TOKENS"))
     temperature: float = Field(default=0.7, validation_alias=AliasChoices("TEMPERATURE"))
     

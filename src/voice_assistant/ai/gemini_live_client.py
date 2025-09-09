@@ -62,7 +62,7 @@ class GeminiLiveEventType(Enum):
 @dataclass
 class GeminiLiveConfig:
     """Configuration for Gemini Live API"""
-    model: str = "gemini-2.0-flash-exp"
+    model: str = "gemini-2.5-flash-preview-native-audio-dialog"
     voice: str = "Puck"  # Available voices: Puck, Charon, Kore, Fenrir
     turn_detection: Dict[str, Any] = None
     input_audio_format: str = "pcm16"  # pcm16 for 16-bit PCM
@@ -148,8 +148,8 @@ class GeminiLiveClient:
         self.is_processing_audio = False
         self.last_audio_timestamp = 0
         
-        # API endpoint
-        self.api_url = f"wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key={self.api_key}"
+        # API endpoint from settings
+        self.api_url = f"{self.settings.gemini_live_api_endpoint}?key={self.api_key}"
         
         logger.info("Gemini Live client initialized")
     
@@ -163,31 +163,49 @@ class GeminiLiveClient:
     async def connect(self) -> bool:
         """Connect to Gemini Live API"""
         try:
-            logger.info("Connecting to Gemini Live API...")
+            logger.info(f"Connecting to Gemini Live API...")
+            logger.info(f"Model: {self.config.model}")
+            logger.info(f"Voice: {self.config.voice}")
+            logger.debug(f"URL: {self.api_url[:100]}...")
             
-            # Create WebSocket connection
-            self.websocket = await websockets.connect(
-                self.api_url,
-                extra_headers={
-                    "User-Agent": "VoiceAssistant/1.0"
-                },
-                ping_interval=30,
-                ping_timeout=10
+            # Create WebSocket connection with timeout
+            # Use simple connection without extra_headers for compatibility
+            self.websocket = await asyncio.wait_for(
+                websockets.connect(
+                    self.api_url,
+                    ping_interval=30,
+                    ping_timeout=10
+                ),
+                timeout=15.0  # 15 second connection timeout
             )
             
+            logger.info("WebSocket connection established")
             self.is_connected = True
             
             # Start connection handler
             self.connection_task = asyncio.create_task(self._connection_handler())
             
-            # Setup session
-            await self._setup_session()
+            # Setup session with timeout
+            await asyncio.wait_for(self._setup_session(), timeout=10.0)
             
-            logger.info("Connected to Gemini Live API")
+            logger.info("Connected to Gemini Live API successfully")
             return True
             
+        except asyncio.TimeoutError:
+            logger.error("Connection timeout - Live API may not be available")
+            self.is_connected = False
+            return False
+        except websockets.exceptions.InvalidStatusCode as e:
+            logger.error(f"Invalid status code: {e.status_code} - Check API key and permissions")
+            self.is_connected = False
+            return False
+        except websockets.exceptions.WebSocketException as e:
+            logger.error(f"WebSocket error: {e}")
+            self.is_connected = False
+            return False
         except Exception as e:
             logger.error(f"Failed to connect to Gemini Live API: {e}")
+            logger.debug(f"Full error details:", exc_info=True)
             self.is_connected = False
             return False
     
@@ -250,11 +268,13 @@ class GeminiLiveClient:
             # Encode audio data as base64
             audio_base64 = base64.b64encode(audio_data).decode('utf-8')
             
-            # Create input audio buffer append event
+            # Create realtime input event
             event = {
-                "type": GeminiLiveEventType.INPUT_AUDIO_BUFFER_APPEND.value,
-                "input_audio_buffer": {
-                    "audio": audio_base64
+                "realtimeInput": {
+                    "audio": {
+                        "data": audio_base64,
+                        "mimeType": "audio/pcm;rate=16000"
+                    }
                 }
             }
             
@@ -272,22 +292,11 @@ class GeminiLiveClient:
             return False
     
     async def commit_audio_buffer(self) -> bool:
-        """Commit the current audio buffer for processing"""
-        if not self.is_connected or not self.websocket:
-            return False
-        
-        try:
-            event = {
-                "type": GeminiLiveEventType.INPUT_AUDIO_BUFFER_COMMIT.value
-            }
-            
-            await self._send_event(event)
-            logger.debug("Audio buffer committed")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error committing audio buffer: {e}")
-            return False
+        """Commit the current audio buffer for processing (automatic in new API)"""
+        # In the new Live API, audio is processed automatically
+        # This method is kept for compatibility but does nothing
+        logger.debug("Audio buffer commit (automatic in Live API)")
+        return True
     
     async def clear_audio_buffer(self) -> bool:
         """Clear the current audio buffer"""
@@ -312,31 +321,11 @@ class GeminiLiveClient:
             return False
     
     async def create_response(self) -> bool:
-        """Request Gemini to create a response"""
-        if not self.is_connected or not self.websocket:
-            return False
-        
-        try:
-            response_id = str(uuid.uuid4())
-            
-            event = {
-                "type": GeminiLiveEventType.RESPONSE_CREATE.value,
-                "response": {
-                    "id": response_id
-                }
-            }
-            
-            await self._send_event(event)
-            
-            if self.session:
-                self.session.current_response_id = response_id
-            
-            logger.debug(f"Response creation requested: {response_id}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error creating response: {e}")
-            return False
+        """Request Gemini to create a response (automatic in new API)"""
+        # In the new Live API, responses are generated automatically
+        # This method is kept for compatibility but does nothing
+        logger.debug("Response creation (automatic in Live API)")
+        return True
     
     async def cancel_response(self) -> bool:
         """Cancel current response generation"""
@@ -368,45 +357,44 @@ class GeminiLiveClient:
         """Setup initial session with Gemini Live API"""
         try:
             setup_event = {
-                "type": GeminiLiveEventType.SETUP.value,
                 "setup": {
-                    "model": self.config.model,
-                    "generation_config": {
-                        "response_modalities": ["AUDIO"],
-                        "speech_config": {
-                            "voice_config": {
-                                "prebuilt_voice_config": {
-                                    "voice_name": self.config.voice
+                    "model": f"models/{self.config.model}",
+                    "generationConfig": {
+                        "responseModalities": ["AUDIO"],
+                        "speechConfig": {
+                            "voiceConfig": {
+                                "prebuiltVoiceConfig": {
+                                    "voiceName": self.config.voice
                                 }
                             }
                         }
                     },
-                    "system_instruction": {
+                    "systemInstruction": {
                         "parts": [{
                             "text": f"You are {self.settings.assistant_name}, a helpful voice assistant. "
                                    f"Respond naturally and conversationally. Keep responses concise but helpful."
                         }]
                     },
                     "tools": [],  # Add tools if needed
-                    "tool_config": {
-                        "function_calling_config": {
-                            "mode": "AUTO"
-                        }
-                    },
-                    "turn_detection": self.config.turn_detection,
-                    "input_audio_config": {
-                        "encoding": self.config.input_audio_format,
-                        "sample_rate_hertz": 16000
-                    },
-                    "output_audio_config": {
-                        "encoding": self.config.output_audio_format,
-                        "sample_rate_hertz": 16000
+                    "realtimeInputConfig": {
+                        "automaticActivityDetection": {
+                            "disabled": False,
+                            "startOfSpeechSensitivity": "START_SENSITIVITY_HIGH",
+                            "endOfSpeechSensitivity": "END_SENSITIVITY_HIGH",
+                            "prefixPaddingMs": 300,
+                            "silenceDurationMs": 500
+                        },
+                        "activityHandling": "START_OF_ACTIVITY_INTERRUPTS"
                     }
                 }
             }
             
+            logger.debug(f"Sending setup event: {json.dumps(setup_event, indent=2)}")
             await self._send_event(setup_event)
-            logger.info("Session setup sent")
+            logger.info("Session setup sent, waiting for confirmation...")
+            
+            # Wait for setup complete (handled by event handlers)
+            # The connection will be considered ready when setup_complete event is received
             
         except Exception as e:
             logger.error(f"Error setting up session: {e}")
@@ -452,70 +440,81 @@ class GeminiLiveClient:
             event = json.loads(message)
             event_type = event.get("type")
             
-            logger.debug(f"Received event: {event_type}")
+            logger.debug(f"Received event type: {event_type}")
+            logger.debug(f"Full event: {json.dumps(event, indent=2)[:500]}...")
             
             # Handle specific events
-            if event_type == GeminiLiveEventType.SESSION_CREATED.value:
-                await self._handle_session_created(event)
-            elif event_type == GeminiLiveEventType.RESPONSE_AUDIO_DELTA.value:
-                await self._handle_audio_delta(event)
-            elif event_type == GeminiLiveEventType.RESPONSE_AUDIO_DONE.value:
-                await self._handle_audio_done(event)
-            elif event_type == GeminiLiveEventType.INPUT_AUDIO_BUFFER_SPEECH_STARTED.value:
-                await self._handle_speech_started(event)
-            elif event_type == GeminiLiveEventType.INPUT_AUDIO_BUFFER_SPEECH_STOPPED.value:
-                await self._handle_speech_stopped(event)
-            elif event_type == GeminiLiveEventType.ERROR.value:
+            if "setupComplete" in event:
+                await self._handle_setup_complete(event)
+            elif "serverContent" in event:
+                await self._handle_server_content(event)
+            elif "toolCall" in event:
+                await self._handle_tool_call(event)
+            elif "error" in event:
                 await self._handle_error(event)
+            else:
+                logger.debug(f"Unhandled event type: {event_type}")
             
             # Trigger registered event handlers
-            await self._trigger_event_handlers(event_type, event)
+            await self._trigger_event_handlers(event_type or "unknown", event)
             
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON message: {e}")
+            logger.debug(f"Raw message: {message[:200]}...")
         except Exception as e:
             logger.error(f"Error handling message: {e}")
+            logger.debug(f"Message: {message[:200]}...", exc_info=True)
     
-    async def _handle_session_created(self, event: Dict[str, Any]):
-        """Handle session created event"""
-        session_info = event.get("session", {})
-        logger.info(f"Gemini Live session created: {session_info.get('id', 'unknown')}")
+    async def _handle_setup_complete(self, event: Dict[str, Any]):
+        """Handle setup complete event"""
+        logger.info("Gemini Live session setup completed")
+        await self._trigger_event_handlers("setup_complete", event)
     
-    async def _handle_audio_delta(self, event: Dict[str, Any]):
-        """Handle audio delta (streaming audio response)"""
+    async def _handle_server_content(self, event: Dict[str, Any]):
+        """Handle server content event"""
         try:
-            audio_data = event.get("response", {}).get("output", {}).get("audio", "")
-            if audio_data:
-                # Decode base64 audio data
-                audio_bytes = base64.b64decode(audio_data)
-                
-                # Trigger audio response handler
-                await self._trigger_event_handlers("audio_response", {
-                    "audio_data": audio_bytes,
-                    "is_delta": True
-                })
+            server_content = event.get("serverContent", {})
+            
+            # Handle audio data
+            if "modelTurn" in server_content:
+                model_turn = server_content["modelTurn"]
+                if "parts" in model_turn:
+                    for part in model_turn["parts"]:
+                        if "inlineData" in part:
+                            inline_data = part["inlineData"]
+                            if inline_data.get("mimeType", "").startswith("audio/"):
+                                audio_data = inline_data.get("data", "")
+                                if audio_data:
+                                    # Decode base64 audio data
+                                    audio_bytes = base64.b64decode(audio_data)
+                                    
+                                    # Trigger audio response handler
+                                    await self._trigger_event_handlers("audio_response", {
+                                        "audio_data": audio_bytes,
+                                        "is_delta": True
+                                    })
+            
+            # Handle turn completion
+            if server_content.get("turnComplete"):
+                await self._trigger_event_handlers("audio_response_done", event)
+            
+            # Handle interruption
+            if server_content.get("interrupted"):
+                await self._trigger_event_handlers("interrupted", event)
                 
         except Exception as e:
-            logger.error(f"Error handling audio delta: {e}")
+            logger.error(f"Error handling server content: {e}")
     
-    async def _handle_audio_done(self, event: Dict[str, Any]):
-        """Handle audio done event"""
-        logger.debug("Audio response completed")
-        await self._trigger_event_handlers("audio_response_done", event)
+    async def _handle_tool_call(self, event: Dict[str, Any]):
+        """Handle tool call event"""
+        logger.debug("Tool call received")
+        await self._trigger_event_handlers("tool_call", event)
     
-    async def _handle_speech_started(self, event: Dict[str, Any]):
-        """Handle speech started event"""
-        if self.session:
-            self.session.is_user_speaking = True
-        
-        logger.debug("User speech started")
-        await self._trigger_event_handlers("speech_started", event)
-    
-    async def _handle_speech_stopped(self, event: Dict[str, Any]):
-        """Handle speech stopped event"""
-        if self.session:
-            self.session.is_user_speaking = False
-        
-        logger.debug("User speech stopped")
-        await self._trigger_event_handlers("speech_stopped", event)
+    async def _handle_speech_activity(self, event: Dict[str, Any]):
+        """Handle speech activity events"""
+        # Speech activity is now handled automatically by the Live API
+        # We'll detect it from the server content events
+        pass
     
     async def _handle_error(self, event: Dict[str, Any]):
         """Handle error event"""

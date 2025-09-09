@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 version: '3.8'
 
 services:
@@ -6,12 +5,12 @@ services:
     image: andrius/asterisk:18-current
     container_name: voice-assistant-asterisk
     ports:
-      - "5060:5060/udp"    # SIP
-      - "8088:8088"        # ARI HTTP
-      - "10000-10099:10000-10099/udp"  # RTP
+      - "5060:5060/udp"                  # SIP signaling
+      - "8088:8088"                      # ARI HTTP API
+      - "10000-20000:10000-20000/udp"    # RTP voice media (expanded range)
     volumes:
-      - ./asterisk-config:/etc/asterisk:ro
-      - ./sounds:/var/lib/asterisk/sounds/custom
+      - ./asterisk-config:/etc/asterisk:ro           # Asterisk SIP, dialplan, ARI config
+      - ./sounds:/var/lib/asterisk/sounds/custom     # TTS output and recorded caller input
       - asterisk-logs:/var/log/asterisk
       - asterisk-spool:/var/spool/asterisk
     environment:
@@ -44,19 +43,3 @@ volumes:
 networks:
   voice-assistant-net:
     driver: bridge
-=======
-version: "3.9"
-
-services:
-  asterisk:
-    container_name: asterisk
-    image: andrius/asterisk
-    restart: unless-stopped
-    ports:
-      - "5060:5060/udp"                  # SIP signaling
-      - "8088:8088"                      # ARI HTTP API
-      - "10000-20000:10000-20000/udp"    # RTP voice media
-    volumes:
-      - ./asterisk-config:/etc/asterisk              # Asterisk SIP, dialplan, ARI config
-      - ./sounds:/var/lib/asterisk/sounds            # TTS output and recorded caller input
->>>>>>> 978c090094b55f79e8769e28b18536e68993dd09

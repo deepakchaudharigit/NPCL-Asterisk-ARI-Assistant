@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🤖 Voice Assistant with Gemini 2.5 Flash & Real-time Live API
 
 A professional voice assistant system powered by Google's Gemini 2.5 Flash model, featuring both standalone voice interaction and **real-time telephony integration** with Asterisk ARI and Gemini Live API.
@@ -456,9 +455,4 @@ This project is licensed under the MIT License.
 **🎉 Ready to start talking to your AI assistant!**
 
 Run `python src/main.py` and start your conversation with Gemini 2.5 Flash! 🚀
-=======
-# Voice Assistant (ARI + LLM)
 
-Run `docker-compose up` for Asterisk.
-Then `uvicorn src.main:app --reload` to start FastAPI.
->>>>>>> 978c090094b55f79e8769e28b18536e68993dd09

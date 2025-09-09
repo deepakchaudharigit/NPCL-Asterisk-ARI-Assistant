@@ -111,12 +111,20 @@ class GeminiClient:
             elif hasattr(response, 'candidates') and response.candidates:
                 candidate = response.candidates[0]
                 if hasattr(candidate, 'finish_reason'):
-                    logger.warning(f"Gemini response blocked by safety filter: {candidate.finish_reason}")
-                    # Return a polite response about content filtering
-                    return "I apologize, but I can't provide a response to that particular request. Could you try rephrasing your question?"
+                    finish_reason = candidate.finish_reason
+                    logger.warning(f"Gemini response blocked: finish_reason={finish_reason}")
+                    
+                    # Handle different finish reasons
+                    if finish_reason == 2:  # SAFETY
+                        return "I understand you're contacting NPCL for assistance. How can I help you with your power connection or complaint today?"
+                    elif finish_reason == 3:  # RECITATION
+                        return "Let me help you with your NPCL inquiry. Could you please tell me about your power connection issue?"
+                    else:
+                        return "Welcome to NPCL customer service! I'm here to help with your power connection. What can I assist you with today?"
             
             # If we get here, something unexpected happened
-            raise Exception("No usable response from Gemini")
+            logger.warning("No usable response from Gemini, using fallback")
+            return "Hello! Welcome to NPCL customer service. I'm here to help with your power connection inquiries. How may I assist you today?"
                 
         except Exception as e:
             self.consecutive_failures += 1
@@ -169,30 +177,33 @@ Remember: You're having a voice conversation, so prioritize clarity and brevity.
         """Generate fallback response when API fails"""
         user_lower = user_input.lower()
         
-        # Context-aware fallback responses
+        # NPCL-specific fallback responses
         if any(word in user_lower for word in ['hello', 'hi', 'hey', 'greetings']):
-            return f"Hello! I'm {self.settings.assistant_name}, your voice assistant. How can I help you today?"
+            return "Hello! Welcome to NPCL customer service. I'm here to help with your power connection. How may I assist you today?"
         
-        elif any(word in user_lower for word in ['help', 'assist', 'support']):
-            return "I'm here to help! I can answer questions, provide information, or just have a conversation. What would you like to know?"
+        elif any(word in user_lower for word in ['power', 'electricity', 'outage', 'cut', 'supply']):
+            return "I understand you're having a power issue. Let me help you with that. Could you please provide your connection details or complaint number?"
         
-        elif any(word in user_lower for word in ['weather', 'temperature', 'forecast']):
-            return "I'd love to help with weather information! For current conditions, I recommend checking a reliable weather service or app."
+        elif any(word in user_lower for word in ['complaint', 'problem', 'issue', 'trouble']):
+            return "I can help you register a complaint or check the status of an existing one. Do you have a complaint number, or would you like to register a new complaint?"
         
-        elif any(word in user_lower for word in ['time', 'date', 'day']):
-            return "For the current time and date, please check your device's clock. Is there something specific about time or scheduling I can help with?"
+        elif any(word in user_lower for word in ['bill', 'payment', 'amount', 'charge']):
+            return "For billing inquiries, I can provide general information. Could you please tell me more about your billing concern?"
+        
+        elif any(word in user_lower for word in ['connection', 'meter', 'line']):
+            return "I can help with connection-related queries. Could you please provide more details about your connection issue?"
         
         elif any(word in user_lower for word in ['thank', 'thanks']):
-            return "You're very welcome! I'm happy to help. Is there anything else you'd like to know?"
+            return "You're welcome, Sir/Madam! Is there anything else I can help you with regarding your power connection?"
         
         else:
-            fallback_responses = [
-                "I'm having a brief connection issue with my AI service, but I'm still here! Could you try rephrasing your question?",
-                "My AI brain is taking a quick break, but I'm listening! Feel free to ask something else or try again.",
-                "I'm experiencing some technical difficulties right now. Could you try asking your question in a different way?",
-                "Sorry, I'm having trouble accessing my full capabilities at the moment. What else would you like to talk about?"
+            npcl_fallback_responses = [
+                "I'm here to help with your NPCL power connection. Could you please tell me more about your inquiry?",
+                "Welcome to NPCL customer service! I can assist with power connections, complaints, and billing. How may I help you?",
+                "I'm having a brief technical issue, but I'm still here to help with your power service needs. Could you try rephrasing your question?",
+                "Thank you for contacting NPCL. I'm here to assist with your power connection. What specific help do you need today?"
             ]
-            return fallback_responses[self.consecutive_failures % len(fallback_responses)]
+            return npcl_fallback_responses[self.consecutive_failures % len(npcl_fallback_responses)]
     
     def reset_conversation(self):
         """Reset conversation history"""

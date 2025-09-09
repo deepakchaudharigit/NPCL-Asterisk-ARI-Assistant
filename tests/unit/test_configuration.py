@@ -29,7 +29,7 @@ class TestVoiceAssistantSettings:
             
             # AI Settings
             assert settings.gemini_model == "gemini-2.5-flash"
-            assert settings.gemini_live_model == "gemini-2.0-flash-exp"
+            assert settings.gemini_live_model == "gemini-2.5-flash-preview-native-audio-dialog"
             assert settings.gemini_voice == "Puck"
             assert settings.max_tokens == 150
             assert settings.temperature == 0.7
@@ -48,7 +48,7 @@ class TestVoiceAssistantSettings:
             assert settings.vad_speech_threshold == 0.1
             
             # Assistant Settings
-            assert settings.assistant_name == "ARI"
+            assert settings.assistant_name == "Tatiana"
             assert settings.company_name == "Voice Assistant Corp"
             assert settings.voice_language == "en"
             

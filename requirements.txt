@@ -1,14 +1,22 @@
-<<<<<<< HEAD
-# Voice Assistant with Gemini 2.5 Flash - Professional Version
-# Core dependencies for the voice assistant
+# Voice Assistant with Gemini 2.5 Flash Live API - Modern Version
+# Core dependencies for real-time voice assistant with interruption support
 
 # AI and ML - Gemini Integration
 google-generativeai>=0.8.0
+
+# Real-time Communication
+websockets>=10.0,<13.0  # For Gemini Live API WebSocket connection (compatible range)
+aiohttp>=3.8.0  # Async HTTP client
 
 # Audio processing
 gtts>=2.4.0
 pydub>=0.25.1
 SpeechRecognition>=3.10.0
+numpy>=1.24.0  # For audio processing and VAD
+sounddevice>=0.4.6  # Real-time audio I/O
+soundfile>=0.12.1  # Audio file support
+scipy>=1.10.0  # Audio signal processing
+audioop-lts>=0.2.2  # Audio operations (cross-platform)
 
 # Web framework (for ARI integration)
 fastapi>=0.104.0
@@ -20,32 +28,30 @@ pydantic>=2.5.0
 pydantic-settings>=2.0.0
 requests>=2.31.0
 
-# Audio enhancements (optional)
-# pyaudio>=0.2.11  # For better microphone support (may need special installation on Windows)
-# sounddevice>=0.4.6  # Alternative audio library
-# soundfile>=0.12.1  # Audio file support
+# Audio interface (platform-specific)
+pyaudio>=0.2.11  # Primary audio interface
+# Alternative for Windows users having trouble with pyaudio:
+# pipwin>=0.5.2  # For Windows audio support
 
 # Development and testing
 pytest>=7.4.0
 black>=23.0.0
 flake8>=6.0.0
+pytest-asyncio>=0.21.0  # For async testing
+psutil>=5.9.0  # System monitoring for tests
 
-# Note: For Windows users having trouble with pyaudio:
+# Legacy dependencies (for compatibility)
+openai>=1.0.0  # For legacy OpenAI integration
+openai-whisper>=20231117  # For legacy Whisper integration
+
+# Note: Installation tips
+# For Windows users having trouble with pyaudio:
 # pip install pipwin
 # pipwin install pyaudio
-=======
-fastapi
-uvicorn
-python-dotenv
-requests
-openai
-gtts
-whisper
-pydantic
-pydub 
-sounddevice 
-scipy 
-SpeechRecognition
-pipwin
-pyaudio
->>>>>>> 978c090094b55f79e8769e28b18536e68993dd09
+#
+# For better audio performance on Linux:
+# sudo apt-get install portaudio19-dev python3-pyaudio
+#
+# For macOS:
+# brew install portaudio
+# pip install pyaudio
