@@ -1,0 +1,296 @@
+version: '3.8'
+
+services:
+  voice-assistant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        VERSION: ${VERSION:-latest}
+        VCS_REF: ${VCS_REF:-$(git rev-parse HEAD)}
+    image: npcl/voice-assistant:${VERSION:-latest}
+    container_name: npcl-voice-assistant
+    restart: unless-stopped
+    
+    environment:
+      - ENVIRONMENT=production
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - ASSISTANT_NAME=${ASSISTANT_NAME:-NPCL Assistant}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ENABLE_PERFORMANCE_MONITORING=true
+      - RUN_MIGRATIONS=true
+      
+      # Database configuration
+      - DATABASE_URL=postgresql://voiceassistant:${DB_PASSWORD}@postgres:5432/voiceassistant
+      
+      # Redis configuration
+      - REDIS_URL=redis://redis:6379/0
+      
+      # Audio configuration
+      - AUDIO_SAMPLE_RATE=16000
+      - AUDIO_CHUNK_SIZE=320
+      - VAD_ENERGY_THRESHOLD=300
+      
+      # Security configuration
+      - ENABLE_RATE_LIMITING=true
+      - ENABLE_INPUT_SANITIZATION=true
+      - ENABLE_AUDIT_LOGGING=true
+      
+      # Telephony configuration
+      - ARI_BASE_URL=http://asterisk:8088/ari
+      - ARI_USERNAME=${ARI_USERNAME:-asterisk}
+      - ARI_PASSWORD=${ARI_PASSWORD}
+    
+    ports:
+      - "8000:8000"
+    
+    volumes:
+      - voice_data:/app/sounds
+      - recordings:/app/recordings
+      - logs:/app/logs
+      - ./config:/app/config:ro
+    
+    networks:
+      - voice_network
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      asterisk:
+        condition: service_started
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: npcl-postgres
+    restart: unless-stopped
+    
+    environment:
+      - POSTGRES_DB=voiceassistant
+      - POSTGRES_USER=voiceassistant
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    
+    networks:
+      - voice_network
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voiceassistant -d voiceassistant"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  redis:
+    image: redis:7-alpine
+    container_name: npcl-redis
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    
+    networks:
+      - voice_network
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  asterisk:
+    image: asterisk:18
+    container_name: npcl-asterisk
+    restart: unless-stopped
+    
+    volumes:
+      - ./asterisk-config:/etc/asterisk:ro
+      - voice_data:/var/lib/asterisk/sounds/custom
+      - asterisk_logs:/var/log/asterisk
+    
+    ports:
+      - "5060:5060/udp"  # SIP
+      - "8088:8088"      # ARI
+      - "10000-10100:10000-10100/udp"  # RTP
+    
+    networks:
+      - voice_network
+    
+    environment:
+      - ASTERISK_UID=1000
+      - ASTERISK_GID=1000
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  nginx:
+    image: nginx:alpine
+    container_name: npcl-nginx
+    restart: unless-stopped
+    
+    ports:
+      - "80:80"
+      - "443:443"
+    
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - logs:/var/log/nginx
+    
+    networks:
+      - voice_network
+    
+    depends_on:
+      - voice-assistant
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: npcl-prometheus
+    restart: unless-stopped
+    
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    
+    ports:
+      - "9090:9090"
+    
+    networks:
+      - voice_network
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: npcl-grafana
+    restart: unless-stopped
+    
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    
+    ports:
+      - "3000:3000"
+    
+    networks:
+      - voice_network
+    
+    depends_on:
+      - prometheus
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  voice_data:
+    driver: local
+  recordings:
+    driver: local
+  logs:
+    driver: local
+  asterisk_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  voice_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

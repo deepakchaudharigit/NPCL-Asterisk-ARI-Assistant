@@ -103,6 +103,10 @@ celerybeat.pid
 
 # Environments
 .env
+.env.local
+.env.development
+.env.test
+.env.production
 .venv
 env/
 venv/
@@ -128,45 +132,48 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Voice Assistant specific
+# Project specific
 sounds/temp/
-sounds/*.mp3
-sounds/*.wav
+recordings/
 logs/
-*.log
-
-# Audio files (except examples)
-*.mp3
 *.wav
-*.ogg
-*.flac
-!sounds/examples/
+*.mp3
+*.pcm
+*.raw
 
-# IDE files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
 
+# Docker
+.dockerignore
+
 # Temporary files
-*.tmp
-*.temp
+tmp/
 temp/
+*.tmp
 
-# API keys and secrets (backup protection)
-*api_key*
-*secret*
-*token*
-.env.local
-.env.production
+# Audio files
+*.aiff
+*.au
+*.flac
+*.m4a
+*.ogg
+*.opus
+*.wma
 
-# Old files from previous version
-ari_fixed_connection.py
-config_cleaned.py
-CONSOLIDATED_DOCUMENTATION.md
-qodo.md
+# Cache directories
+.cache/
+.qodo/
+.benchmarks/
+
+# Performance monitoring
+*.prof
+*.pstats
