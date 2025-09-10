@@ -1,0 +1,233 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asterisk
+  namespace: npcl-voice-assistant
+  labels:
+    app: asterisk
+    component: pbx
+spec:
+  replicas: 1  # Asterisk typically runs as single instance
+  strategy:
+    type: Recreate  # Asterisk needs consistent state
+  selector:
+    matchLabels:
+      app: asterisk
+      component: pbx
+  template:
+    metadata:
+      labels:
+        app: asterisk
+        component: pbx
+    spec:
+      containers:
+      - name: asterisk
+        image: andrius/asterisk:18-current
+        ports:
+        - containerPort: 5060
+          name: sip
+          protocol: UDP
+        - containerPort: 8088
+          name: ari
+          protocol: TCP
+        - containerPort: 10000
+          name: rtp-start
+          protocol: UDP
+        - containerPort: 20000
+          name: rtp-end
+          protocol: UDP
+        env:
+        - name: ASTERISK_UID
+          value: "1000"
+        - name: ASTERISK_GID
+          value: "1000"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: asterisk-config
+          mountPath: /etc/asterisk
+          readOnly: true
+        - name: sounds
+          mountPath: /var/lib/asterisk/sounds/custom
+        - name: asterisk-logs
+          mountPath: /var/log/asterisk
+        - name: asterisk-spool
+          mountPath: /var/spool/asterisk
+        livenessProbe:
+          tcpSocket:
+            port: 8088
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 8088
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: asterisk-config
+        configMap:
+          name: asterisk-config
+      - name: sounds
+        persistentVolumeClaim:
+          claimName: voice-assistant-sounds
+      - name: asterisk-logs
+        emptyDir: {}
+      - name: asterisk-spool
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asterisk-service
+  namespace: npcl-voice-assistant
+  labels:
+    app: asterisk
+    component: pbx
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 5060
+    targetPort: 5060
+    protocol: UDP
+    name: sip
+  - port: 8088
+    targetPort: 8088
+    protocol: TCP
+    name: ari
+  selector:
+    app: asterisk
+    component: pbx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asterisk-rtp-service
+  namespace: npcl-voice-assistant
+  labels:
+    app: asterisk
+    component: rtp
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 10000
+    targetPort: 10000
+    protocol: UDP
+    name: rtp-10000
+  - port: 10001
+    targetPort: 10001
+    protocol: UDP
+    name: rtp-10001
+  - port: 10002
+    targetPort: 10002
+    protocol: UDP
+    name: rtp-10002
+  - port: 10003
+    targetPort: 10003
+    protocol: UDP
+    name: rtp-10003
+  - port: 10004
+    targetPort: 10004
+    protocol: UDP
+    name: rtp-10004
+  selector:
+    app: asterisk
+    component: pbx
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asterisk-config
+  namespace: npcl-voice-assistant
+data:
+  extensions.conf: |
+    [general]
+    static=yes
+    writeprotect=no
+    clearglobalvars=no
+
+    [globals]
+
+    [default]
+    ; Voice Assistant Extension
+    exten => 1000,1,NoOp(Incoming call to Voice Assistant)
+    same => n,Answer()
+    same => n,Stasis(gemini-voice-assistant)
+    same => n,Hangup()
+
+    ; Test Extensions
+    exten => 1001,1,NoOp(External Media Test)
+    same => n,Answer()
+    same => n,Stasis(gemini-voice-assistant,external_media_test)
+    same => n,Hangup()
+
+    exten => 1002,1,NoOp(Audio Test)
+    same => n,Answer()
+    same => n,Playback(hello-world)
+    same => n,Echo()
+    same => n,Hangup()
+
+  ari.conf: |
+    [general]
+    enabled = yes
+    pretty = yes
+    allowed_origins = *
+
+    [asterisk]
+    type = user
+    read_only = no
+    password = 1234
+
+  sip.conf: |
+    [general]
+    context=default
+    allowoverlap=no
+    udpbindaddr=0.0.0.0:5060
+    tcpenable=no
+    tcpbindaddr=0.0.0.0:5060
+    transport=udp
+    srvlookup=yes
+    disallow=all
+    allow=ulaw
+    allow=alaw
+    allow=gsm
+    allow=g726
+    allow=g722
+
+    [1000]
+    type=friend
+    secret=password
+    host=dynamic
+    context=default
+    canreinvite=no
+    dtmfmode=rfc2833
+
+  http.conf: |
+    [general]
+    enabled=yes
+    bindaddr=0.0.0.0
+    bindport=8088
+    prefix=asterisk
+
+  modules.conf: |
+    [modules]
+    autoload=yes
+
+    ; Load required modules
+    load => res_ari.so
+    load => res_ari_applications.so
+    load => res_ari_asterisk.so
+    load => res_ari_bridges.so
+    load => res_ari_channels.so
+    load => res_ari_endpoints.so
+    load => res_ari_events.so
+    load => res_ari_playbacks.so
+    load => res_ari_recordings.so
+    load => res_ari_sounds.so
+    load => res_stasis.so
+    load => app_stasis.so
+    load => res_http_websocket.so

@@ -1,0 +1,194 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voice-assistant
+  namespace: npcl-voice-assistant
+  labels:
+    app: voice-assistant
+    component: api
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: voice-assistant
+      component: api
+  template:
+    metadata:
+      labels:
+        app: voice-assistant
+        component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: voice-assistant
+      containers:
+      - name: voice-assistant
+        image: npcl/voice-assistant:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        - containerPort: 8090
+          name: external-media
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        - containerPort: 8080
+          name: dashboard
+          protocol: TCP
+        env:
+        - name: CLUSTER_NODE_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        envFrom:
+        - configMapRef:
+            name: voice-assistant-config
+        - secretRef:
+            name: voice-assistant-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: sounds
+          mountPath: /app/sounds
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: sounds
+        persistentVolumeClaim:
+          claimName: voice-assistant-sounds
+      - name: logs
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: voice-assistant-service
+  namespace: npcl-voice-assistant
+  labels:
+    app: voice-assistant
+    component: api
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  - port: 8090
+    targetPort: 8090
+    protocol: TCP
+    name: external-media
+  - port: 9090
+    targetPort: 9090
+    protocol: TCP
+    name: metrics
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: dashboard
+  selector:
+    app: voice-assistant
+    component: api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: voice-assistant-loadbalancer
+  namespace: npcl-voice-assistant
+  labels:
+    app: voice-assistant
+    component: loadbalancer
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  - port: 8090
+    targetPort: 8090
+    protocol: TCP
+    name: external-media
+  selector:
+    app: voice-assistant
+    component: api
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: voice-assistant
+  namespace: npcl-voice-assistant
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: voice-assistant
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "patch"]
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: voice-assistant
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: voice-assistant
+subjects:
+- kind: ServiceAccount
+  name: voice-assistant
+  namespace: npcl-voice-assistant
