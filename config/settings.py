@@ -128,6 +128,32 @@ class VoiceAssistantSettings(BaseSettings):
     enable_performance_logging: bool = Field(default=False, description="Enable performance logging")
     session_cleanup_interval: int = Field(default=300, description="Session cleanup interval in seconds")
     
+    # Advanced Audio Processing Settings
+    target_rms: int = Field(default=1000, description="Target RMS for audio normalization")
+    silence_threshold: int = Field(default=100, description="RMS threshold for silence detection")
+    normalization_factor: float = Field(default=0.8, description="Audio normalization factor")
+    
+    # Function Calling Settings
+    enable_function_calling: bool = Field(default=True, description="Enable function calling")
+    function_timeout: int = Field(default=30, description="Function execution timeout in seconds")
+    
+    # NPCL-Specific Settings
+    npcl_mode: bool = Field(default=True, description="Enable NPCL-specific features")
+    npcl_service_areas: str = Field(default="Noida,Greater Noida,Ghaziabad,Faridabad,Gurugram", description="NPCL service areas")
+    
+    # RTP Streaming Settings
+    rtp_payload_type: int = Field(default=0, description="RTP payload type")
+    rtp_frame_size: int = Field(default=320, description="RTP frame size in samples")
+    rtp_buffer_size: int = Field(default=1600, description="RTP buffer size in samples")
+    rtp_starting_port: int = Field(default=20000, description="Starting port for RTP allocation")
+    
+    # WebSocket Gemini Settings
+    gemini_realtime_url: str = Field(
+        default="wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent",
+        alias="GEMINI_REALTIME_URL",
+        description="Gemini real-time WebSocket URL"
+    )
+    
     # Directories
     sounds_dir: str = Field(default="sounds", alias="SOUNDS_DIR")
     temp_audio_dir: str = Field(default="sounds/temp", alias="TEMP_AUDIO_DIR")
