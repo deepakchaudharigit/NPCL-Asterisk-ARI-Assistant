@@ -147,10 +147,10 @@ def main():
     print("\n🚀 What you can do now:")
     
     if basic_ok:
-        print("✅ Run chat mode: python src/main_with_options.py (choose option 2)")
+        print("✅ Run chat mode: python src/main.py (choose option 1)")
         if live_ok:
-            print("✅ Run voice mode: python src/main_with_options.py (choose option 1)")
-            print("✅ Run both modes: python src/main_with_options.py (choose option 3)")
+            print("✅ Run voice mode: python src/main.py (choose option 2)")
+            print("✅ Run both modes: python src/main.py (choose option 3)")
         else:
             print("⚠️  Voice mode unavailable (Live API quota/access issue)")
     else:

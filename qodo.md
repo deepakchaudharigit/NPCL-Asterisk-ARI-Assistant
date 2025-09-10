@@ -98,7 +98,7 @@ voice_assistant_ari_llm/
 │   │       ├── logger.py          # Logging configuration
 │   │       └── exceptions.py      # Custom exceptions
 │   ├── main.py                    # 🚀 Main entry point
-│   └── main_clean.py              # Clean version without audio spam
+│   └── main.py                    # Unified main entry point
 ├── config/                        # ⚙️ Configuration
 │   ├── settings.py                # Pydantic settings
 │   └── environment.py             # Environment management
@@ -129,7 +129,7 @@ voice_assistant_ari_llm/
 | File | Purpose | When You'd Touch It |
 |------|---------|---------------------|
 | `src/main.py` | Main application entry point | Adding new features |
-| `src/main_clean.py` | Clean version without audio spam | Production use |
+| `src/main.py` | Unified main entry point | All modes |
 | `src/voice_assistant/core/assistant.py` | Traditional voice assistant | Modifying conversation flow |
 | `src/voice_assistant/core/modern_assistant.py` | Modern Live API assistant | Live API features |
 | `src/voice_assistant/ai/gemini_client.py` | Gemini 2.5 Flash integration | Changing AI model or prompts |
@@ -336,7 +336,7 @@ Professional Voice Assistant System
 #### Option 2: Clean Version (No Audio Spam)
 
 ```bash
-python src/main_clean.py
+python src/main.py
 ```
 
 This version provides a cleaner interface without repetitive audio logs.

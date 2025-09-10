@@ -197,7 +197,7 @@ start_realtime.bat
 python src/run_realtime_server.py
 
 # Or start the standalone application
-python src/main_realtime.py
+python src/main.py
 ```
 
 ### Method 3: Using uvicorn directly

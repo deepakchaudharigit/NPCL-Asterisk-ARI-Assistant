@@ -34,11 +34,9 @@ except ImportError:
     AudioConfig = None
     AudioFormat = None
 
-try:
-    from src.voice_assistant.core.constants import AudioConstants, DEFAULT_AUDIO_CONFIG
-except ImportError:
-    AudioConstants = None
-    DEFAULT_AUDIO_CONFIG = None
+# Removed constants import to avoid circular dependency
+AudioConstants = None
+DEFAULT_AUDIO_CONFIG = None
 
 try:
     from src.voice_assistant.core.performance import PerformanceMonitor
@@ -444,26 +442,16 @@ def test_conversation_data():
 @pytest.fixture
 def enhanced_audio_config():
     """Provide enhanced audio configuration with constants."""
-    if AudioConfig is None or AudioConstants is None or AudioFormat is None:
-        # Fallback configuration for when modules are not available
-        class MockAudioConfig:
-            def __init__(self):
-                self.sample_rate = 16000
-                self.channels = 1
-                self.sample_width = 2
-                self.format = "slin16"
-                self.chunk_size = 320
-                self.buffer_size = 1600
-        return MockAudioConfig()
-    
-    return AudioConfig(
-        sample_rate=AudioConstants.SAMPLE_RATE_16KHZ,
-        channels=AudioConstants.CHANNELS_MONO,
-        sample_width=AudioConstants.SAMPLE_WIDTH_16BIT,
-        format=AudioFormat.SLIN16,
-        chunk_size=AudioConstants.CHUNK_SIZE_20MS,
-        buffer_size=AudioConstants.BUFFER_SIZE_SMALL
-    )
+    # Always use fallback configuration to avoid circular dependency
+    class MockAudioConfig:
+        def __init__(self):
+            self.sample_rate = 16000
+            self.channels = 1
+            self.sample_width = 2
+            self.format = "slin16"
+            self.chunk_size = 320
+            self.buffer_size = 1600
+    return MockAudioConfig()
 
 @pytest.fixture
 def test_error_scenarios():

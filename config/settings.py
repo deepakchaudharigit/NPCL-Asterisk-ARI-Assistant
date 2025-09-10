@@ -8,10 +8,7 @@ from typing import Optional
 from pathlib import Path
 import os
 import sys
-from src.voice_assistant.core.constants import (
-    AudioConstants, NetworkConstants, AppConstants, AIConstants,
-    DEFAULT_AUDIO_CONFIG, DEFAULT_VAD_CONFIG, DEFAULT_NETWORK_CONFIG, DEFAULT_AI_CONFIG
-)
+# Removed circular import - constants are now defined inline
 
 
 class VoiceAssistantSettings(BaseSettings):
@@ -81,21 +78,21 @@ class VoiceAssistantSettings(BaseSettings):
         alias="GEMINI_LIVE_API_ENDPOINT",
         description="Gemini Live API WebSocket endpoint"
     )
-    max_tokens: int = Field(default=AIConstants.MAX_TOKENS_SHORT, ge=1, le=2048, description="Maximum tokens for AI responses")
-    temperature: float = Field(default=AIConstants.TEMPERATURE_BALANCED, ge=0.0, le=2.0, description="AI response creativity")
+    max_tokens: int = Field(default=150, ge=1, le=2048, description="Maximum tokens for AI responses")
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="AI response creativity")
     
     # Real-time Audio Settings (slin16 format for Asterisk)
-    audio_sample_rate: int = Field(default=AudioConstants.SAMPLE_RATE_16KHZ, description="Audio sample rate in Hz")
-    audio_chunk_size: int = Field(default=AudioConstants.CHUNK_SIZE_20MS, description="Audio chunk size in samples")
-    audio_buffer_size: int = Field(default=AudioConstants.BUFFER_SIZE_SMALL, description="Audio buffer size in samples")
+    audio_sample_rate: int = Field(default=16000, description="Audio sample rate in Hz")
+    audio_chunk_size: int = Field(default=320, description="Audio chunk size in samples")
+    audio_buffer_size: int = Field(default=1600, description="Audio buffer size in samples")
     audio_format: str = Field(default="slin16", description="Audio format")
-    audio_channels: int = Field(default=AudioConstants.CHANNELS_MONO, description="Number of audio channels")
-    audio_sample_width: int = Field(default=AudioConstants.SAMPLE_WIDTH_16BIT, description="Audio sample width in bytes")
+    audio_channels: int = Field(default=1, description="Number of audio channels")
+    audio_sample_width: int = Field(default=2, description="Audio sample width in bytes")
     
     # Voice Activity Detection
-    vad_energy_threshold: int = Field(default=AudioConstants.VAD_ENERGY_THRESHOLD_LOW, description="VAD energy threshold")
-    vad_silence_threshold: float = Field(default=AudioConstants.VAD_SILENCE_THRESHOLD_NORMAL, description="VAD silence threshold in seconds")
-    vad_speech_threshold: float = Field(default=AudioConstants.VAD_SPEECH_THRESHOLD_NORMAL, description="VAD speech threshold in seconds")
+    vad_energy_threshold: int = Field(default=300, description="VAD energy threshold")
+    vad_silence_threshold: float = Field(default=0.5, description="VAD silence threshold in seconds")
+    vad_speech_threshold: float = Field(default=0.1, description="VAD speech threshold in seconds")
     
     # Voice Settings
     voice_language: str = Field(default="en", alias="VOICE_LANGUAGE")
@@ -105,7 +102,7 @@ class VoiceAssistantSettings(BaseSettings):
     # Timeout Settings
     listen_timeout: float = Field(default=20.0, description="Listen timeout in seconds")
     phrase_time_limit: float = Field(default=15.0, description="Phrase time limit in seconds")
-    max_retries: int = Field(default=NetworkConstants.MAX_RETRIES_DEFAULT, description="Maximum number of retries")
+    max_retries: int = Field(default=3, description="Maximum number of retries")
     
     # Assistant Settings
     assistant_name: str = Field(default="Tatiana", alias="ASSISTANT_NAME")
@@ -123,13 +120,13 @@ class VoiceAssistantSettings(BaseSettings):
     
     # Real-time Processing Settings
     enable_interruption_handling: bool = Field(default=True, description="Enable interruption handling")
-    max_call_duration: int = Field(default=AppConstants.MAX_CALL_DURATION_SECONDS, description="Maximum call duration in seconds")
+    max_call_duration: int = Field(default=3600, description="Maximum call duration in seconds")
     auto_answer_calls: bool = Field(default=True, description="Auto answer incoming calls")
     enable_call_recording: bool = Field(default=False, description="Enable call recording")
     
     # Performance Settings
     enable_performance_logging: bool = Field(default=False, description="Enable performance logging")
-    session_cleanup_interval: int = Field(default=AppConstants.SESSION_CLEANUP_INTERVAL_SECONDS, description="Session cleanup interval in seconds")
+    session_cleanup_interval: int = Field(default=300, description="Session cleanup interval in seconds")
     
     # Directories
     sounds_dir: str = Field(default="sounds", alias="SOUNDS_DIR")

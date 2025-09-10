@@ -37,7 +37,25 @@ def run_command(cmd, description):
         return False
 
 
-def check_dependencies():
+def install_missing_packages(missing_packages):
+    """Install missing packages automatically."""
+    print(f"\n📦 Installing missing packages: {', '.join(missing_packages)}")
+    
+    try:
+        # Try to install missing packages
+        cmd = [sys.executable, "-m", "pip", "install"] + missing_packages
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        print("✅ Packages installed successfully!")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Failed to install packages: {e}")
+        print(f"Error output: {e.stderr}")
+        return False
+    except Exception as e:
+        print(f"❌ Installation error: {e}")
+        return False
+
+def check_dependencies(auto_install=True):
     """Check if required dependencies are installed."""
     print_banner("CHECKING DEPENDENCIES")
     
@@ -60,8 +78,24 @@ def check_dependencies():
     
     if missing_packages:
         print(f"\n⚠️  Missing packages: {', '.join(missing_packages)}")
-        print("Install with: pip install -r requirements-test.txt")
-        return False
+        
+        if auto_install:
+            print("\n🔧 Attempting to install missing packages...")
+            if install_missing_packages(missing_packages):
+                print("\n🔄 Re-checking dependencies...")
+                # Re-check after installation
+                return check_dependencies(auto_install=False)
+            else:
+                print("\n💡 Manual installation required:")
+                print("   pip install -r requirements-test.txt")
+                print("   OR")
+                print("   python install_test_deps.py")
+                print("   OR")
+                print("   install_test_deps.bat  (Windows)")
+                return False
+        else:
+            print("Install with: pip install -r requirements-test.txt")
+            return False
     
     print("\n✅ All required dependencies are installed!")
     return True
@@ -78,6 +112,7 @@ Examples:
   python run_all_tests.py --coverage        # Run with coverage
   python run_all_tests.py --fast            # Skip slow tests
   python run_all_tests.py --parallel        # Run in parallel
+  python run_all_tests.py --no-install      # Don't auto-install missing deps
         """
     )
     
@@ -100,13 +135,21 @@ Examples:
     parser.add_argument("--html-report", action="store_true", help="Generate HTML report")
     parser.add_argument("--xml-report", action="store_true", help="Generate XML report")
     
+    # Installation options
+    parser.add_argument("--no-install", action="store_true", help="Don't auto-install missing dependencies")
+    
     args = parser.parse_args()
     
     print_banner("VOICE ASSISTANT TEST RUNNER")
     
     # Check dependencies first
-    if not check_dependencies():
+    auto_install = not args.no_install
+    if not check_dependencies(auto_install=auto_install):
         print("\n❌ Dependency check failed. Please install missing packages.")
+        print("\n💡 Quick fixes:")
+        print("   1. pip install -r requirements-test.txt")
+        print("   2. python install_test_deps.py")
+        print("   3. install_test_deps.bat  (Windows)")
         sys.exit(1)
     
     # Determine which tests to run

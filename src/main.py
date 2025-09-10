@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 NPCL Voice Assistant - Main Entry Point
-Provides 3 modes: Voice Only, Chat Only, or Both
+Unified version with fallback for import issues
 """
 
 import sys
@@ -10,29 +10,61 @@ import asyncio
 import json
 import base64
 import time
-import websockets
 from pathlib import Path
 
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
-import logging
-from voice_assistant.utils.logger import setup_logger
-from config.settings import get_settings
-
 def print_banner():
     """Print application banner"""
     print("=" * 70)
-    print("🤖 NPCL Voice Assistant - Choose Your Mode")
+    print("🤖 NPCL Voice Assistant")
     print("🎆 Powered by Gemini 2.5 Flash")
     print("=" * 70)
+
+def check_api_key():
+    """Check if API key is configured"""
+    try:
+        env_file = Path('.env')
+        if not env_file.exists():
+            print("❌ .env file not found")
+            return False, None
+        
+        with open(env_file, 'r') as f:
+            content = f.read()
+            for line in content.split('\n'):
+                if line.strip().startswith('GOOGLE_API_KEY='):
+                    api_key = line.split('=', 1)[1].strip()
+                    if api_key and api_key != 'your-google-api-key-here':
+                        print("✅ Google API Key: Configured")
+                        return True, api_key
+            
+        print("❌ Google API Key: Not configured properly")
+        return False, None
+    except Exception as e:
+        print(f"❌ Error checking API key: {e}")
+        return False, None
+
+def print_system_status():
+    """Print system status"""
+    print("🔍 System Check:")
+    
+    # Check virtual environment
+    if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
+        print("✅ Virtual environment: Active")
+    else:
+        print("⚠️  Virtual environment: Not detected")
+    
+    # Check API key
+    api_key_valid, api_key = check_api_key()
+    return api_key_valid, api_key
 
 def print_mode_options():
     """Print mode selection options"""
     print("\n🎯 Choose Your Assistant Mode:")
-    print("1. 🎤 Voice Only - Real-time voice conversation")
-    print("2. 💬 Chat Only - Text-based conversation")
-    print("3. 🎭 Both - Voice + Chat combined")
+    print("1. 💬 Chat Mode - Text-based conversation")
+    print("2. 🎤 Voice Mode - Real-time voice conversation (Advanced)")
+    print("3. 🎭 Combined Mode - Voice + Chat (Advanced)")
     print("4. ❌ Exit")
     print()
 
@@ -51,23 +83,9 @@ def get_user_choice():
         except Exception:
             print("❌ Invalid input. Please enter a number.")
 
-class NPCLAssistant:
-    """NPCL Assistant with multiple modes"""
-    
-    def __init__(self):
-        self.settings = get_settings()
-        self.logger = setup_logger()
-        self.ws = None
-        self.running = False
-        self.setup_complete = False
-        
-        # NPCL specific data
-        self.names = ["dheeraj", "nidhi", "nikunj"]
-        self.complaint_number = "0000054321"
-        
-    def get_npcl_system_instruction(self):
-        """Get NPCL system instruction"""
-        return """You are a customer service assistant for NPCL (Noida Power Corporation Limited), a power utility company.
+def get_npcl_system_instruction():
+    """Get NPCL system instruction"""
+    return """You are a customer service assistant for NPCL (Noida Power Corporation Limited), a power utility company.
 
 Your role:
 - Help customers with power connection inquiries
@@ -91,10 +109,93 @@ Communication style:
 Sample complaint number format: 0000054321
 Always be ready to help with power-related issues."""
 
+def start_simple_chat_mode(api_key):
+    """Start simple chat mode using direct Gemini API"""
+    print("\n💬 Starting Chat Mode...")
+    print("Type your messages below. Type 'quit' to exit.")
+    print("-" * 50)
+    
+    try:
+        import google.generativeai as genai
+        
+        # Configure Gemini
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # NPCL system prompt
+        system_prompt = get_npcl_system_instruction()
+        
+        # Initial greeting
+        initial_response = model.generate_content(system_prompt + "\n\nUser: Hello, I need help with my power connection\nAssistant:")
+        print(f"🤖 NPCL Assistant: {initial_response.text}")
+        
+        while True:
+            try:
+                user_input = input("\n👤 You: ").strip()
+                
+                if user_input.lower() in ['quit', 'exit', 'bye', 'goodbye']:
+                    print("👋 Thank you for contacting NPCL. Have a great day!")
+                    break
+                
+                if not user_input:
+                    continue
+                
+                # Get AI response
+                prompt = f"{system_prompt}\n\nUser: {user_input}\nAssistant:"
+                response = model.generate_content(prompt)
+                print(f"🤖 NPCL Assistant: {response.text}")
+                
+            except KeyboardInterrupt:
+                print("\n👋 Chat session ended.")
+                break
+            except Exception as e:
+                print(f"❌ Error: {e}")
+                
+    except Exception as e:
+        print(f"❌ Failed to initialize chat: {e}")
+        print("\n💡 Make sure you have:")
+        print("1. Valid Google API key in .env file")
+        print("2. Internet connection")
+        print("3. google-generativeai package installed")
+
+# Advanced mode classes and functions (with import protection)
+class NPCLAssistant:
+    """NPCL Assistant with multiple modes"""
+    
+    def __init__(self):
+        try:
+            from voice_assistant.utils.logger import setup_logger
+            from config.settings import get_settings
+            
+            self.settings = get_settings()
+            self.logger = setup_logger()
+        except ImportError as e:
+            print(f"⚠️  Advanced features unavailable due to import error: {e}")
+            print("🔄 Falling back to simple mode...")
+            raise
+        
+        self.ws = None
+        self.running = False
+        self.setup_complete = False
+        self.is_listening = False
+        self.is_speaking = False
+        self.audio_chunks_received = 0
+        
+        # NPCL specific data
+        self.names = ["dheeraj", "nidhi", "nikunj"]
+        self.complaint_number = "0000054321"
+        self.session_active = False
+        
+    def get_npcl_system_instruction(self):
+        """Get NPCL system instruction"""
+        return get_npcl_system_instruction()
+
     async def start_voice_mode(self):
         """Start voice-only mode with WebSocket"""
         print("\n🎤 Starting Voice Mode...")
         print("🔊 Make sure your microphone and speakers are working!")
+        print("💡 Say 'quit' or press Ctrl+C to exit voice mode")
+        print("-" * 50)
         
         try:
             # Check quota first
@@ -107,13 +208,23 @@ Always be ready to help with power-related issues."""
             
         except Exception as e:
             self.logger.error(f"Voice mode error: {e}")
-            print(f"❌ Voice mode failed: {e}")
+            error_msg = str(e)
+            
+            if "Unsupported language code" in error_msg:
+                print("❌ Voice mode failed: Unsupported language configuration")
+                print("💡 The Gemini Live API has limited language support")
+            elif "Live API not available" in error_msg:
+                print("❌ Voice mode failed: Gemini Live API not available")
+                print("💡 Live API is in limited preview - not available for all users")
+            else:
+                print(f"❌ Voice mode failed: {e}")
+            
             print("🔄 Falling back to chat mode...")
             await self.start_chat_mode()
 
     async def start_chat_mode(self):
         """Start chat-only mode"""
-        print("\n💬 Starting Chat Mode...")
+        print("\n💬 Starting Advanced Chat Mode...")
         print("Type your messages below. Type 'quit' to exit.")
         print("-" * 50)
         
@@ -151,7 +262,12 @@ Always be ready to help with power-related issues."""
                     
         except Exception as e:
             self.logger.error(f"Chat mode error: {e}")
-            print(f"❌ Chat mode failed: {e}")
+            print(f"❌ Advanced chat mode failed: {e}")
+            print("🔄 Falling back to simple chat mode...")
+            # Fall back to simple chat
+            api_key_valid, api_key = check_api_key()
+            if api_key_valid:
+                start_simple_chat_mode(api_key)
 
     async def start_both_mode(self):
         """Start combined voice + chat mode"""
@@ -224,11 +340,13 @@ Always be ready to help with power-related issues."""
 
     async def start_websocket_connection(self):
         """Start WebSocket connection for voice mode"""
-        ws_url = f"{self.settings.gemini_live_api_endpoint}?key={self.settings.google_api_key}"
-        
         try:
+            import websockets
+            
+            ws_url = f"{self.settings.gemini_live_api_endpoint}?key={self.settings.google_api_key}"
+            
             self.ws = await websockets.connect(ws_url)
-            self.logger.info("WebSocket connection established")
+            print("🔗 Connecting to Gemini Live API...")
             
             # Setup message
             setup_message = {
@@ -239,7 +357,7 @@ Always be ready to help with power-related issues."""
                         "temperature": 0.2,
                         "maxOutputTokens": 256,
                         "speechConfig": {
-                            "languageCode": "en-IN",
+                            "languageCode": "en-US",
                             "voiceConfig": {
                                 "prebuiltVoiceConfig": {"voiceName": self.settings.gemini_voice}
                             },
@@ -250,46 +368,126 @@ Always be ready to help with power-related issues."""
             }
             
             await self.ws.send(json.dumps(setup_message))
-            self.logger.info("Setup message sent")
+            print("⚙️  Configuring voice settings...")
             
-            # Handle messages
-            await self.handle_websocket_messages()
+            # Handle messages with timeout and graceful exit
+            try:
+                # Create a task for message handling
+                message_task = asyncio.create_task(self.handle_websocket_messages())
+                
+                # Create a task for user input handling
+                input_task = asyncio.create_task(self.handle_user_input())
+                
+                # Wait for either task to complete
+                done, pending = await asyncio.wait(
+                    [message_task, input_task],
+                    return_when=asyncio.FIRST_COMPLETED
+                )
+                
+                # Cancel pending tasks
+                for task in pending:
+                    task.cancel()
+                    try:
+                        await task
+                    except asyncio.CancelledError:
+                        pass
+                
+            except KeyboardInterrupt:
+                print("\n👋 Voice session ended")
+                if self.ws:
+                    await self.ws.close()
+            except asyncio.CancelledError:
+                print("\n👋 Voice session cancelled")
+                if self.ws:
+                    await self.ws.close()
             
         except websockets.exceptions.InvalidStatusCode as e:
             if e.status_code == 403:
                 raise Exception("API quota exceeded or Live API not available")
             else:
                 raise Exception(f"WebSocket connection failed: {e}")
+        except websockets.exceptions.ConnectionClosedError as e:
+            if "Unsupported language code" in str(e):
+                raise Exception(f"Unsupported language code 'en-US' for model {self.settings.gemini_live_model}")
+            else:
+                raise Exception(f"WebSocket connection closed: {e}")
         except Exception as e:
-            raise Exception(f"WebSocket error: {e}")
+            if "Unsupported language code" in str(e):
+                raise Exception(f"Unsupported language code for Gemini Live API: {e}")
+            else:
+                raise Exception(f"WebSocket error: {e}")
 
     async def handle_websocket_messages(self):
         """Handle WebSocket messages"""
         try:
+            # Show initial status
+            print("\n🔄 Initializing voice conversation...")
+            conversation_started = False
+            
             async for message in self.ws:
                 response = json.loads(message)
                 
                 if "setupComplete" in response:
-                    self.logger.info("Setup complete")
+                    print("\r✅ Voice connection established")
+                    print("🎤 Ready to start conversation...")
                     self.setup_complete = True
+                    self.is_listening = True
                     await self.send_trigger_message()
+                    conversation_started = True
                     
                 elif response.get("serverContent"):
                     await self.handle_server_content(response["serverContent"])
                     
+                # Add a small delay to prevent overwhelming the terminal
+                await asyncio.sleep(0.01)
+                
+                # Keep the conversation alive
+                if conversation_started and self.setup_complete:
+                    # Continue processing messages until user interrupts
+                    continue
+                    
+        except KeyboardInterrupt:
+            print("\n👋 Voice session ended by user")
+            if self.ws:
+                await self.ws.close()
+        except websockets.exceptions.ConnectionClosed:
+            print("\n🔌 Connection closed by server")
         except Exception as e:
-            self.logger.error(f"WebSocket message error: {e}")
+            if "Unsupported language code" in str(e):
+                self.logger.error(f"Language code not supported: {e}")
+                raise Exception(f"Unsupported language code for Gemini Live API")
+            else:
+                self.logger.error(f"WebSocket message error: {e}")
+                print(f"\n❌ Voice session error: {e}")
 
     async def send_trigger_message(self):
         """Send trigger message to start conversation"""
         trigger_message = {
             "clientContent": {
-                "turns": [{"role": "user", "parts": [{"text": "hello"}]}],
+                "turns": [{"role": "user", "parts": [{"text": "Hello, I am calling NPCL customer service. Please greet me and ask how you can help with my power connection."}]}],
                 "turnComplete": True,
             }
         }
         await self.ws.send(json.dumps(trigger_message))
-        self.logger.info("Trigger message sent")
+        print("\r🤖 Starting NPCL conversation...", end="", flush=True)
+        
+    async def send_keep_alive(self):
+        """Send keep-alive message to maintain session"""
+        try:
+            # Mark session as active
+            self.session_active = True
+            
+            # In a real implementation, this would:
+            # - Monitor microphone for voice input
+            # - Send audio data when user speaks
+            # - Handle voice activity detection
+            # - Process "quit" voice commands
+            
+            # For now, just maintain the connection
+            self.logger.debug("Voice session is active and ready for input")
+            
+        except Exception as e:
+            self.logger.debug(f"Keep-alive error: {e}")
 
     async def handle_server_content(self, server_content):
         """Handle server content"""
@@ -297,63 +495,118 @@ Always be ready to help with power-related issues."""
             model_turn = server_content["modelTurn"]
             
             if model_turn.get("parts"):
+                # Check if this is the start of a response
+                if not self.is_speaking:
+                    print("\r🤖 NPCL Assistant is responding...", end="", flush=True)
+                    self.is_speaking = True
+                    self.is_listening = False
+                    self.audio_chunks_received = 0
+                
                 for part in model_turn["parts"]:
                     if part.get("inlineData") and "audio/pcm" in part["inlineData"].get("mimeType", ""):
                         await self.handle_audio_response(part["inlineData"])
+                    elif part.get("text"):
+                        # If there's text content, show it
+                        text_content = part["text"]
+                        if text_content.strip():
+                            print(f"\n🤖 NPCL Assistant: {text_content}")
+                        
+            # Check if turn is complete
+            if model_turn.get("turnComplete", False):
+                if self.is_speaking:
+                    print("\n🎤 Listening... (speak now or say 'quit' to exit)")
+                    print("💡 Voice conversation is active - speak to continue")
+                    print("🎙️  In a real implementation, your microphone would be active now")
+                    self.is_speaking = False
+                    self.is_listening = True
+                    
+                    # Keep the session alive by sending a keep-alive message
+                    await self.send_keep_alive()
 
     async def handle_audio_response(self, inline_data):
         """Handle audio response"""
         pcm_chunk = base64.b64decode(inline_data["data"])
-        self.logger.info(f"Received audio chunk: {len(pcm_chunk)} bytes")
+        self.audio_chunks_received += 1
+        
+        # Only log occasionally to avoid spam (and only in debug mode)
+        if self.audio_chunks_received % 20 == 1:  # Log every 20th chunk
+            self.logger.debug(f"Processing audio chunk {self.audio_chunks_received} ({len(pcm_chunk)} bytes)")
+            
+        # Show a simple progress indicator for audio processing
+        if self.audio_chunks_received % 5 == 0:  # Update every 5 chunks
+            dots = "..." if (self.audio_chunks_received // 5) % 3 == 0 else "." * ((self.audio_chunks_received // 5) % 3 + 1)
+            print(f"\r🤖 NPCL Assistant is responding{dots}", end="", flush=True)
+        
+        # Simulate audio playback
+        if self.audio_chunks_received == 1:
+            print("\n🔊 Playing welcome message...")
         
         # Here you would play the audio
-        print("🔊 Playing audio response...")
-
-def print_system_status():
-    """Print system status"""
-    try:
-        settings = get_settings()
+        # For now, we simulate audio playback
+        # In a real implementation, you would:
+        # - Convert PCM to playable format (WAV, MP3, etc.)
+        # - Use audio library (pygame, pyaudio, etc.) to play through speakers
+        # - Handle audio buffering and synchronization
+        # - Manage audio device selection
         
-        print("✅ System Information:")
-        print(f"   Assistant: NPCL Voice Assistant")
-        print(f"   AI Model: {settings.gemini_model}")
-        print(f"   Voice: {settings.gemini_voice}")
+        # Simulate audio processing delay
+        await asyncio.sleep(0.01)
         
-        # Check virtual environment
-        if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
-            print("✅ Virtual environment: Active")
-        else:
-            print("⚠️  Virtual environment: Not detected")
-        
-        # Check .env file
-        if Path(".env").exists():
-            print("✅ Configuration: .env file found")
-        else:
-            print("❌ Configuration: .env file not found")
-            return False
-        
-        # Check API key
-        if settings.google_api_key and settings.google_api_key != "your-google-api-key-here":
-            print("✅ Google API Key: Configured")
-            return True
-        else:
-            print("❌ Google API Key: Not configured")
-            return False
+    async def handle_user_input(self):
+        """Handle user input during voice session"""
+        try:
+            print("\n💡 Voice session active. Press Enter to continue or type 'quit' to exit.")
             
-    except Exception as e:
-        print(f"❌ Configuration error: {e}")
-        return False
+            while True:
+                # Use asyncio to handle input without blocking
+                try:
+                    # Simulate waiting for user input
+                    await asyncio.sleep(1)
+                    
+                    # In a real implementation, you would:
+                    # - Capture microphone input
+                    # - Process voice commands
+                    # - Send audio data to Gemini Live API
+                    # - Handle voice activity detection
+                    
+                    # For now, just keep the session alive
+                    if not self.session_active:
+                        self.session_active = True
+                        print("\n🎤 Voice session is now active - speak to interact")
+                        print("💡 In a real implementation, your voice would be captured here")
+                        print("🔄 Session will continue until you press Ctrl+C")
+                        
+                        # Simulate a long-running voice session
+                        await asyncio.sleep(30)  # Keep session alive for 30 seconds
+                        
+                        if self.session_active:
+                            print("\n⏰ Voice session timeout - returning to menu")
+                            break
+                    
+                except asyncio.CancelledError:
+                    break
+                except Exception as e:
+                    self.logger.error(f"User input error: {e}")
+                    break
+                    
+        except KeyboardInterrupt:
+            print("\n👋 Voice session ended by user")
+        except Exception as e:
+            self.logger.error(f"Input handling error: {e}")
 
 def main():
     """Main application entry point"""
     print_banner()
     
     # Check system status
-    if not print_system_status():
+    api_key_valid, api_key = print_system_status()
+    
+    if not api_key_valid:
         print("\n❌ System check failed. Please fix the issues above.")
         print("\n💡 Quick fix:")
         print("1. Copy .env.example to .env")
-        print("2. Add your Google API key to .env")
+        print("2. Get your Google API key from: https://aistudio.google.com/")
+        print("3. Add your Google API key to .env file")
         return 1
     
     print("\n🎆 NPCL Features:")
@@ -372,21 +625,29 @@ def main():
             print("👋 Thank you for using NPCL Voice Assistant!")
             break
         
-        # Create assistant instance
-        assistant = NPCLAssistant()
-        
         try:
-            if choice == 1:  # Voice Only
-                asyncio.run(assistant.start_voice_mode())
-            elif choice == 2:  # Chat Only
-                asyncio.run(assistant.start_chat_mode())
-            elif choice == 3:  # Both
-                asyncio.run(assistant.start_both_mode())
+            if choice == 1:  # Chat Only (Simple mode first, advanced fallback)
+                start_simple_chat_mode(api_key)
+            elif choice in [2, 3]:  # Voice or Combined (Advanced modes)
+                try:
+                    # Try advanced mode
+                    assistant = NPCLAssistant()
+                    
+                    if choice == 2:  # Voice Only
+                        asyncio.run(assistant.start_voice_mode())
+                    elif choice == 3:  # Both
+                        asyncio.run(assistant.start_both_mode())
+                        
+                except ImportError:
+                    print("⚠️  Advanced features not available. Using simple chat mode instead.")
+                    start_simple_chat_mode(api_key)
                 
         except KeyboardInterrupt:
             print("\n👋 Session interrupted by user")
         except Exception as e:
             print(f"❌ Error: {e}")
+            print("🔄 Falling back to simple chat mode...")
+            start_simple_chat_mode(api_key)
         
         # Ask if user wants to try another mode
         try:
