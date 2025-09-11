@@ -28,7 +28,7 @@ optimized_logger = LoggerFactory.get_logger("websocket_gemini")
 @dataclass
 class WebSocketGeminiConfig:
     """Configuration for WebSocket Gemini client"""
-    model: str = "models/gemini-live-2.5-flash-preview"
+    model: str = "models/gemini-1.5-flash"  # Updated to use 1.5 Flash
     voice: str = "Kore"
     language_code: str = "en-IN"
     temperature: float = 0.2

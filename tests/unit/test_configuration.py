@@ -28,8 +28,8 @@ class TestVoiceAssistantSettings:
             settings = VoiceAssistantSettings()
             
             # AI Settings
-            assert settings.gemini_model == "gemini-2.5-flash"
-            assert settings.gemini_live_model == "gemini-2.5-flash-preview-native-audio-dialog"
+            assert settings.gemini_model == "gemini-1.5-flash"
+            assert settings.gemini_live_model == "gemini-1.5-flash"
             assert settings.gemini_voice == "Puck"
             assert settings.max_tokens == 150
             assert settings.temperature == 0.7

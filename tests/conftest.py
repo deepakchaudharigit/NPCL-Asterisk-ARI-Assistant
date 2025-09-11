@@ -162,7 +162,7 @@ def test_settings():
             
             # AI Settings
             self.google_api_key = "test-api-key"
-            self.gemini_model = "gemini-2.5-flash"
+            self.gemini_model = "gemini-1.5-flash"
             self.gemini_live_model = "gemini-2.0-flash-exp"
             self.gemini_voice = "Puck"
             self.max_tokens = 150
@@ -281,13 +281,13 @@ def gemini_config():
         # Fallback configuration for when module is not available
         class MockGeminiLiveConfig:
             def __init__(self):
-                self.model = "gemini-2.5-flash-preview-native-audio-dialog"
+                self.model = "gemini-1.5-flash"
                 self.voice = "Puck"
                 self.input_audio_format = "pcm16"
                 self.output_audio_format = "pcm16"
         return MockGeminiLiveConfig()
     return GeminiLiveConfig(
-        model="gemini-2.5-flash-preview-native-audio-dialog",
+        model="gemini-1.5-flash",
         voice="Puck",
         input_audio_format="pcm16",
         output_audio_format="pcm16"

@@ -1,5 +1,5 @@
 """
-Configuration settings for Voice Assistant with Gemini 2.5 Flash and Real-time Live API
+Configuration settings for Voice Assistant with Gemini 1.5 Flash
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -69,9 +69,10 @@ class VoiceAssistantSettings(BaseSettings):
             raise ValueError("Google API key is required and cannot be empty or placeholder")
         return v
     
-    # AI Model Settings
-    gemini_model: str = Field(default="gemini-2.5-flash", description="Gemini model for text generation")
-    gemini_live_model: str = Field(default="gemini-2.5-flash-preview-native-audio-dialog", description="Gemini Live API model")
+    # AI Model Settings (Default: 1.5 Flash)
+    gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model for text generation")
+    gemini_live_model: str = Field(default="gemini-1.5-flash", description="Gemini Live API model")
+    # Removed gemini_model_option - using 1.5 Flash only
     gemini_voice: str = Field(default="Puck", description="Voice for Gemini Live API")
     gemini_live_api_endpoint: str = Field(
         default="wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent",
@@ -165,6 +166,14 @@ class VoiceAssistantSettings(BaseSettings):
         extra="ignore",
         validate_assignment=True
     )
+    
+    def get_gemini_model(self) -> str:
+        """Get the Gemini model (always 1.5 Flash)"""
+        return "gemini-1.5-flash"
+    
+    def get_gemini_live_model(self) -> str:
+        """Get the Gemini Live model (always 1.5 Flash)"""
+        return "gemini-1.5-flash"
 
 
 class LoggingSettings(BaseSettings):

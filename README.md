@@ -1,10 +1,20 @@
-# 🤖 Voice Assistant with Gemini 2.5 Flash & Real-time Live API
+# 🎤 NPCL Voice Assistant - Production Ready
 
-A professional voice assistant system powered by Google's Gemini 2.5 Flash model, featuring both standalone voice interaction and **real-time telephony integration** with Asterisk ARI and Gemini Live API.
+**A professional voice assistant system powered by Google's Gemini 1.5 Flash model, designed specifically for NPCL (Noida Power Corporation Limited) customer service with real-time telephony integration.**
+
+## ✅ **Fully Functional - Ready to Use**
+
+- 🎤 **Complete Voice Conversation** - Speak and listen naturally
+- 🤖 **AI-Powered Responses** - Gemini 1.5 Flash integration
+- 🏢 **NPCL Customer Service** - Professional power utility support
+- 🆘 **Automatic Offline Mode** - Works even when API quota exceeded
+- 📞 **Telephony Integration** - Asterisk PBX support
+
+**📖 For complete documentation, see [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)**
 
 ## ✨ What's New in Version 2.0
 
-- **🔄 Migrated from OpenAI to Gemini 2.5 Flash**: More efficient and cost-effective AI responses
+- **🔄 Uses Gemini 1.5 Flash**: Efficient and cost-effective AI responses
 - **🎆 NEW: Real-time Gemini Live API Integration**: Direct voice-to-voice conversation with ultra-low latency
 - **📡 NEW: Asterisk ARI with externalMedia**: Bidirectional audio streaming for telephony integration
 - **🎤 NEW: Voice Activity Detection**: Intelligent interruption handling for natural conversations
@@ -21,7 +31,6 @@ A professional voice assistant system powered by Google's Gemini 2.5 Flash model
 ```bash
 # 1. Activate virtual environment
 .venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # Linux/Mac
 
 # 2. Install dependencies
 pip install -r requirements.txt
@@ -32,7 +41,15 @@ cp .env.example .env
 
 # 4. Run the voice assistant
 python src/main.py
+# Choose option 2 (Voice Mode) for full voice conversation
 ```
+
+### 🎉 **Expected Experience**
+- ✅ Welcome message speaks
+- ✅ Voice input with 15-second timeout
+- ✅ AI responses speak clearly
+- ✅ Automatic offline mode if quota exceeded
+- ✅ Professional NPCL customer service context
 
 ## 📁 Professional Project Structure
 
@@ -44,7 +61,7 @@ voice_assistant_ari_llm/
 │   │   │   ├── assistant.py       # Main VoiceAssistant class
 │   │   │   └── conversation.py    # Conversation management
 │   │   ├── ai/                    # 🤖 AI integration
-│   │   │   ├── gemini_client.py   # Gemini 2.5 Flash client
+│   │   │   ├── gemini_client.py   # Gemini 1.5 Flash client
 │   │   │   └── prompts.py         # System prompts
 │   │   ├── audio/                 # 🎵 Audio processing
 │   │   │   ├── speech_recognition.py  # Speech-to-text
@@ -80,8 +97,8 @@ voice_assistant_ari_llm/
 
 ## 🎯 Key Features
 
-### 🤖 AI-Powered with Gemini 2.5 Flash
-- **Latest Model**: Uses Google's Gemini 2.5 Flash for intelligent responses
+### 🤖 AI-Powered with Gemini 1.5 Flash
+- **Latest Model**: Uses Google's Gemini 1.5 Flash for intelligent responses
 - **Cost Efficient**: More affordable than previous OpenAI integration
 - **Fast Responses**: Optimized for real-time conversation
 - **Fallback System**: Graceful handling of API failures
@@ -181,7 +198,7 @@ python src/main.py
 
 **Features:**
 - 🎤 Voice input with timeout handling
-- 🧠 AI processing with Gemini 2.5 Flash
+- 🧠 AI processing with Gemini 1.5 Flash
 - 🗣️ Speech output with Google TTS
 - 📊 Real-time status updates
 - 📈 Session statistics
@@ -236,7 +253,7 @@ python scripts/setup_realtime.py
 GOOGLE_API_KEY=your-google-api-key-here
 
 # AI Settings
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-1.5-flash
 GEMINI_LIVE_MODEL=gemini-2.0-flash-exp
 GEMINI_VOICE=Puck
 MAX_TOKENS=150
@@ -361,11 +378,11 @@ The assistant provides comprehensive monitoring:
 
 Example output:
 ```
-🤖 Voice Assistant with Gemini 2.5 Flash
+🤖 Voice Assistant with Gemini 1.5 Flash
 ============================================================
 ✅ System Information:
    Assistant Name: ARI
-   AI Model: gemini-2.5-flash
+   AI Model: gemini-1.5-flash
    Voice Language: en
    Listen Timeout: 20.0s
 ✅ Virtual environment: Active
@@ -377,7 +394,7 @@ Example output:
 👤 You: Hello, how are you?
 [🧠 Processing - Thinking...]
 [🗣️ Speaking - Response ready]
-🤖 Assistant: Hello! I'm doing great, thank you for asking. I'm ARI, your voice assistant powered by Gemini 2.5 Flash. How can I help you today?
+🤖 Assistant: Hello! I'm doing great, thank you for asking. I'm ARI, your voice assistant powered by Gemini 1.5 Flash. How can I help you today?
 ```
 
 ## 🚨 Troubleshooting
@@ -426,7 +443,7 @@ If upgrading from the old OpenAI-based version:
 
 ### Key Changes
 - ❌ Removed: OpenAI dependency and API key
-- ✅ Added: Google Generative AI (Gemini 2.5 Flash)
+- ✅ Added: Google Generative AI (Gemini 1.5 Flash)
 - 🔄 Updated: Professional project structure
 - 📈 Improved: Error handling and logging
 - 🧪 Added: Test suite and documentation
@@ -453,7 +470,34 @@ This project is licensed under the MIT License.
 
 ---
 
+## 📚 **Complete Documentation**
+
+**📖 For comprehensive documentation, troubleshooting, and technical details:**
+
+### **[PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)** - Complete Project Guide
+- 🎯 Project overview and architecture
+- 🔧 Technical fixes implemented
+- 🎤 Voice modes and features
+- 🏢 NPCL customer service capabilities
+- 🚨 Troubleshooting guide
+- 📊 Performance and monitoring
+- 🚀 Deployment options
+
+### **[AGENTS.md](AGENTS.md)** - Developer Guidelines
+- 🏢 Project structure and organization
+- 📝 Coding standards and conventions
+- 🧪 Testing framework and guidelines
+- 🔄 Common workflows and patterns
+
+---
+
 **🎉 Ready to start talking to your AI assistant!**
 
-Run `python src/main.py` and start your conversation with Gemini 2.5 Flash! 🚀
+```bash
+python src/main.py
+# Choose option 2 (Voice Mode)
+# Start speaking - full conversation ready! 🎤
+```
+
+**Your NPCL Voice Assistant is production-ready and fully functional! 🚀**
 

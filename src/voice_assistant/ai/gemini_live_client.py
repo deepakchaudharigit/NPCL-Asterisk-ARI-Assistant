@@ -62,7 +62,7 @@ class GeminiLiveEventType(Enum):
 @dataclass
 class GeminiLiveConfig:
     """Configuration for Gemini Live API"""
-    model: str = "gemini-2.5-flash-preview-native-audio-dialog"
+    model: str = "gemini-1.5-flash"  # Updated to use 1.5 Flash
     voice: str = "Puck"  # Available voices: Puck, Charon, Kore, Fenrir
     turn_detection: Dict[str, Any] = None
     input_audio_format: str = "pcm16"  # pcm16 for 16-bit PCM

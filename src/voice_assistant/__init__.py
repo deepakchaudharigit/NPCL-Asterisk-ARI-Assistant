@@ -1,6 +1,6 @@
 """
 Voice Assistant Package
-Professional voice assistant with Gemini 2.5 Flash integration
+Professional voice assistant with Gemini 1.5 Flash integration
 """
 
 from .core.assistant import VoiceAssistant

@@ -35,8 +35,8 @@ graph TB
 | Variable | Type | Required | Default | Description |
 |----------|------|----------|---------|-------------|
 | `GOOGLE_API_KEY` | string | ✅ | - | Google AI API key |
-| `GEMINI_MODEL` | string | ❌ | `gemini-2.5-flash` | Gemini model for text |
-| `GEMINI_LIVE_MODEL` | string | ❌ | `gemini-2.5-flash-preview-native-audio-dialog` | Gemini Live API model |
+| `GEMINI_MODEL` | string | ❌ | `gemini-1.5-flash` | Gemini model for text |
+| `GEMINI_LIVE_MODEL` | string | ❌ | `gemini-1.5-flash` | Gemini Live API model |
 | `GEMINI_VOICE` | string | ❌ | `Puck` | Voice for Live API |
 | `ASSISTANT_NAME` | string | ❌ | `Tatiana` | Assistant name |
 | `AUDIO_SAMPLE_RATE` | integer | ❌ | `16000` | Audio sample rate (Hz) |

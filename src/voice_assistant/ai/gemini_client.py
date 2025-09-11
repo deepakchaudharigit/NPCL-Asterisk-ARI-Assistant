@@ -1,5 +1,5 @@
 """
-Gemini 2.5 Flash client for voice assistant
+Gemini 1.5 Flash client for voice assistant
 """
 
 import logging
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiClient:
-    """Client for interacting with Gemini 2.5 Flash model"""
+    """Client for interacting with Gemini 1.5 Flash model"""
     
     def __init__(self, api_key: Optional[str] = None):
         """
@@ -64,7 +64,7 @@ class GeminiClient:
     
     def generate_response(self, user_input: str, system_prompt: Optional[str] = None) -> str:
         """
-        Generate a response using Gemini 2.5 Flash
+        Generate a response using Gemini 1.5 Flash
         
         Args:
             user_input: User's input text

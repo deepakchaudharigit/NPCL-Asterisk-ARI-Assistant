@@ -1,10 +1,10 @@
-# Voice Assistant with Gemini 2.5 Flash
+# Voice Assistant with Gemini 1.5 Flash
 
-A professional voice assistant system powered by Google's Gemini 2.5 Flash model, featuring both standalone voice interaction and telephony integration through Asterisk ARI.
+A professional voice assistant system powered by Google's Gemini 1.5 Flash model, featuring both standalone voice interaction and telephony integration through Asterisk ARI.
 
 ## 🚀 Features
 
-- **🤖 AI-Powered Conversations**: Uses Gemini 2.5 Flash for intelligent responses
+- **🤖 AI-Powered Conversations**: Uses Gemini 1.5 Flash for intelligent responses
 - **🎤 Speech Recognition**: Google Speech Recognition for accurate voice input
 - **🗣️ Text-to-Speech**: Google TTS with standard voice for clear audio output
 - **📞 Telephony Integration**: Asterisk ARI support for phone-based interactions
@@ -88,7 +88,7 @@ Key configuration options in `.env`:
 GOOGLE_API_KEY=your-google-api-key-here
 
 # AI Settings
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-1.5-flash
 MAX_TOKENS=150
 TEMPERATURE=0.7
 
@@ -123,7 +123,7 @@ The assistant will:
 1. Test all components (microphone, AI, TTS)
 2. Play a welcome message
 3. Listen for your voice input
-4. Process with Gemini 2.5 Flash
+4. Process with Gemini 1.5 Flash
 5. Respond with synthesized speech
 
 ### Voice Commands
@@ -156,7 +156,7 @@ For phone-based interactions:
 ### Key Components
 
 1. **VoiceAssistant**: Main orchestrator class
-2. **GeminiClient**: AI integration with Gemini 2.5 Flash
+2. **GeminiClient**: AI integration with Gemini 1.5 Flash
 3. **SpeechRecognizer**: Google Speech Recognition wrapper
 4. **TextToSpeech**: Google TTS integration
 5. **ARIHandler**: Asterisk telephony integration

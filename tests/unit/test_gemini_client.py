@@ -28,7 +28,7 @@ class TestGeminiLiveConfig:
         """Test default configuration values."""
         config = GeminiLiveConfig()
         
-        assert config.model == "gemini-2.5-flash-preview-native-audio-dialog"
+        assert config.model == "gemini-1.5-flash"
         assert config.voice == "Puck"
         assert config.input_audio_format == "pcm16"
         assert config.output_audio_format == "pcm16"

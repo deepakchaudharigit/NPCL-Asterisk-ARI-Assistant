@@ -1,4 +1,4 @@
-# Voice Assistant with Gemini 2.5 Flash Live API - Modern Version
+# Voice Assistant with Gemini 1.5 Flash - Modern Version
 # Core dependencies for real-time voice assistant with interruption support
 
 # AI and ML - Gemini Integration
@@ -10,8 +10,9 @@ aiohttp>=3.8.0  # Async HTTP client
 
 # Audio processing
 gtts>=2.4.0
+pyttsx3>=2.90  # Text-to-speech for voice output
+SpeechRecognition>=3.10.0  # Speech-to-text for voice input
 pydub>=0.25.1
-SpeechRecognition>=3.10.0
 numpy>=1.24.0  # For audio processing and VAD
 sounddevice>=0.4.6  # Real-time audio I/O
 soundfile>=0.12.1  # Audio file support

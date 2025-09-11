@@ -13,8 +13,8 @@ metadata:
   namespace: npcl-voice-assistant
 data:
   # Application Configuration
-  GEMINI_MODEL: "gemini-2.5-flash"
-  GEMINI_LIVE_MODEL: "gemini-2.5-flash-preview-native-audio-dialog"
+  GEMINI_MODEL: "gemini-1.5-flash"
+  GEMINI_LIVE_MODEL: "gemini-1.5-flash"
   GEMINI_VOICE: "Puck"
   MAX_TOKENS: "150"
   TEMPERATURE: "0.7"

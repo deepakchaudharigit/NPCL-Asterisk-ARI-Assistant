@@ -22,7 +22,7 @@ class TestGeminiClient:
         """Test client initialization"""
         with patch('voice_assistant.ai.gemini_client.get_settings') as mock_settings:
             mock_settings.return_value.google_api_key = "test-key"
-            mock_settings.return_value.gemini_model = "gemini-2.5-flash"
+            mock_settings.return_value.gemini_model = "gemini-1.5-flash"
             mock_settings.return_value.temperature = 0.7
             mock_settings.return_value.max_tokens = 150
             
@@ -45,7 +45,7 @@ class TestGeminiClient:
         """Test response generation"""
         with patch('voice_assistant.ai.gemini_client.get_settings') as mock_settings:
             mock_settings.return_value.google_api_key = "test-key"
-            mock_settings.return_value.gemini_model = "gemini-2.5-flash"
+            mock_settings.return_value.gemini_model = "gemini-1.5-flash"
             mock_settings.return_value.temperature = 0.7
             mock_settings.return_value.max_tokens = 150
             
@@ -68,7 +68,7 @@ class TestGeminiClient:
         """Test fallback response on API failure"""
         with patch('voice_assistant.ai.gemini_client.get_settings') as mock_settings:
             mock_settings.return_value.google_api_key = "test-key"
-            mock_settings.return_value.gemini_model = "gemini-2.5-flash"
+            mock_settings.return_value.gemini_model = "gemini-1.5-flash"
             mock_settings.return_value.temperature = 0.7
             mock_settings.return_value.max_tokens = 150
             mock_settings.return_value.assistant_name = "ARI"

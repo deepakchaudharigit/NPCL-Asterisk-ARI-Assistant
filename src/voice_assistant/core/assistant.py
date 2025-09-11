@@ -296,7 +296,7 @@ class VoiceAssistant:
     
     def _get_welcome_message(self) -> str:
         """Get welcome message"""
-        return f"Hello! I'm {self.settings.assistant_name}, your voice assistant powered by Gemini 2.5 Flash. I'm ready to help you with any questions or tasks. What would you like to talk about?"
+        return f"Hello! I'm {self.settings.assistant_name}, your voice assistant powered by Gemini 1.5 Flash. I'm ready to help you with any questions or tasks. What would you like to talk about?"
     
     def _get_farewell_message(self) -> str:
         """Get farewell message"""
