@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
-NPCL Voice Assistant - Main Entry Point
-Unified version with fallback for import issues
+Main entry point for NPCL Asterisk ARI Voice Assistant with Multi-Language Support
+Provides multiple interaction modes including chat, voice, and combined modes with Gemini AI integration.
+
+NPCL Voice Assistant - Main Entry Point with 12 Language Support
 """
 
 import sys
@@ -15,12 +17,132 @@ from pathlib import Path
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
+# Suppress warnings and debug messages for clean output
+try:
+    from suppress_warnings import *
+except ImportError:
+    # Fallback warning suppression
+    os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    warnings.filterwarnings("ignore", category=UserWarning)
+
 def print_banner():
     """Print application banner"""
     print("=" * 70)
-    print("🤖 NPCL Voice Assistant")
+    print("🌍 NPCL Multilingual Voice Assistant")
     print("🎆 Powered by Gemini 1.5 Flash")
+    print("🗣️ Supporting 12 Languages")
     print("=" * 70)
+
+def print_language_selection():
+    """Print language selection menu"""
+    print("\n🌍 Choose Your Language / अपनी भाषा चुनें / আপনার ভাষা বেছে নিন:")
+    print("=" * 60)
+    print("1.  🇮🇳 English (India)")
+    print("2.  🇮🇳 हिन्दी (Hindi)")
+    print("3.  🇮🇳 বাংলা (Bengali)")
+    print("4.  🇮🇳 తెలుగు (Telugu)")
+    print("5.  🇮🇳 मराठी (Marathi)")
+    print("6.  🇮🇳 தமிழ் (Tamil)")
+    print("7.  🇮🇳 ગુજરાતી (Gujarati)")
+    print("8.  🇮🇳 اردو (Urdu)")
+    print("9.  🇮🇳 ಕನ್ನಡ (Kannada)")
+    print("10. 🇮🇳 ଓଡ଼ିଆ (Odia)")
+    print("11. 🇮🇳 മലയാളം (Malayalam)")
+    print("12. 🇬🇷 Ελληνικά (Greek)")
+    print("=" * 60)
+
+def get_language_choice():
+    """Get user's language choice"""
+    while True:
+        try:
+            choice = input("\nEnter your choice (1-12): ").strip()
+            if choice in [str(i) for i in range(1, 13)]:
+                return int(choice)
+            else:
+                print("❌ Invalid choice. Please enter 1-12.")
+        except KeyboardInterrupt:
+            print("\n👋 Goodbye!")
+            return None
+        except Exception:
+            print("❌ Invalid input. Please enter a number.")
+
+def get_language_config(choice):
+    """Get language configuration based on choice"""
+    languages = {
+        1: {"code": "en-IN", "name": "English", "native": "English", "flag": "🇮🇳"},
+        2: {"code": "hi-IN", "name": "Hindi", "native": "हिन्दी", "flag": "🇮🇳"},
+        3: {"code": "bn-IN", "name": "Bengali", "native": "বাংলা", "flag": "🇮🇳"},
+        4: {"code": "te-IN", "name": "Telugu", "native": "తెలుగు", "flag": "🇮🇳"},
+        5: {"code": "mr-IN", "name": "Marathi", "native": "मराठी", "flag": "🇮🇳"},
+        6: {"code": "ta-IN", "name": "Tamil", "native": "தமிழ்", "flag": "🇮🇳"},
+        7: {"code": "gu-IN", "name": "Gujarati", "native": "ગુજરાતી", "flag": "🇮🇳"},
+        8: {"code": "ur-IN", "name": "Urdu", "native": "اردو", "flag": "🇮🇳"},
+        9: {"code": "kn-IN", "name": "Kannada", "native": "ಕನ್ನಡ", "flag": "🇮🇳"},
+        10: {"code": "or-IN", "name": "Odia", "native": "ଓଡ଼ିଆ", "flag": "🇮🇳"},
+        11: {"code": "ml-IN", "name": "Malayalam", "native": "മലയാളം", "flag": "🇮🇳"},
+        12: {"code": "el-GR", "name": "Greek", "native": "Ελληνικά", "flag": "🇬🇷"}
+    }
+    return languages.get(choice)
+
+def get_welcome_messages():
+    """Get welcome messages in all languages"""
+    return {
+        "en-IN": "Welcome to NPCL Customer Service! I am your multilingual voice assistant.",
+        "hi-IN": "एनपीसीएल ग्राहक सेवा में आपका स्वागत है! मैं आपका बहुभाषी आवाज सहायक हूं।",
+        "bn-IN": "এনপিসিএল গ্রাহক সেবায় আপনাকে স্বাগতম! আমি আপনার বহুভাষিক কণ্ঠ সহায়ক।",
+        "te-IN": "NPCL కస్టమర్ సర్వీస్‌కు స్వాగతం! నేను మీ బహుభాషా వాయిస్ అసిస్టెంట్‌ని।",
+        "mr-IN": "एनपीसीएल ग्राहक सेवेत आपले स्वागत आहे! मी तुमचा बहुभाषिक आवाज सहाय्यक आहे।",
+        "ta-IN": "NPCL வாடிக்கையாளர் சேவைக்கு வரவேற்கிறோம்! நான் உங்கள் பன்மொழி குரல் உதவியாளர்।",
+        "gu-IN": "NPCL કસ્ટમર સર્વિસમાં આપનું સ્વાગત છે! હું તમારો બહુભાષી અવાજ સહાયક છું।",
+        "ur-IN": "NPCL کسٹمر سروس میں آپ کا خوش آمدید! میں آپ کا کثیر لسانی آواز معاون ہوں۔",
+        "kn-IN": "NPCL ಗ್ರಾಹಕ ಸೇವೆಗೆ ಸ್ವಾಗತ! ನಾನು ನಿಮ್ಮ ಬಹುಭಾಷಾ ಧ್ವನಿ ಸಹಾಯಕ.",
+        "or-IN": "NPCL ଗ୍ରାହକ ସେବାରେ ଆପଣଙ୍କୁ ସ୍ୱାଗତ! ମୁଁ ଆପଣଙ୍କର ବହୁଭାଷୀ ସ୍ୱର ସହାୟକ।",
+        "ml-IN": "NPCL കസ്റ്റമർ സർവീസിലേക്ക് സ്വാഗതം! ഞാൻ നിങ്ങളുടെ ബഹുഭാഷാ ശബ്ദ സഹായകനാണ്।",
+        "el-GR": "Καλώς ήρθατε στην εξυπηρέτηση πελατών NPCL! Είμαι ο πολυγλωσσικός φωνητικός σας βοηθός।"
+    }
+
+def get_mode_selection_messages():
+    """Get mode selection messages in all languages"""
+    return {
+        "en-IN": {
+            "title": "🎯 Choose Your Assistant Mode:",
+            "chat": "💬 Chat Mode - Text-based conversation",
+            "voice": "🎤 Voice Mode - Real-time voice conversation",
+            "combined": "🎭 Combined Mode - Voice + Chat",
+            "exit": "❌ Exit",
+            "prompt": "Enter your choice (1-4): ",
+            "note": "💡 Note: If API quota is exceeded, offline mode will start automatically"
+        },
+        "hi-IN": {
+            "title": "🎯 अपना सहायक मोड चुनें:",
+            "chat": "💬 चैट मोड - टेक्स्ट-आधारित बातचीत",
+            "voice": "🎤 वॉयस मोड - रियल-टाइम वॉयस बातचीत",
+            "combined": "🎭 संयुक्त मोड - वॉयस + चैट",
+            "exit": "❌ बाहर निकलें",
+            "prompt": "अपनी पसंद दर्ज करें (1-4): ",
+            "note": "💡 नोट: यदि API कोटा समाप्त हो जाता है, तो ऑफ़लाइन मोड अपने आप शुरू हो जाएगा"
+        },
+        "bn-IN": {
+            "title": "🎯 আপনার সহায়ক মোড বেছে নিন:",
+            "chat": "💬 চ্যাট মোড - টেক্সট-ভিত্তিক কথোপকথন",
+            "voice": "🎤 ভয়েস মোড - রিয়েল-টাইম ভয়েস কথোপকথন",
+            "combined": "🎭 সম্মিলিত মোড - ভয়েস + চ্যাট",
+            "exit": "❌ প্রস্থান",
+            "prompt": "আপনার পছন্দ লিখুন (1-4): ",
+            "note": "💡 নোট: যদি API কোটা শেষ হয়ে যায়, অফলাইন মোড স্বয়ংক্রিয়ভাবে শুরু হবে"
+        },
+        "el-GR": {
+            "title": "🎯 Επιλέξτε τη λειτουργία του βοηθού σας:",
+            "chat": "💬 Λειτουργία Chat - Συνομιλία βασισμένη σε κείμενο",
+            "voice": "🎤 Λειτουργία φωνής - Συνομιλία φωνής σε πραγματικό χρόνο",
+            "combined": "🎭 Συνδυασμένη λειτουργία - Φωνή + Chat",
+            "exit": "❌ Έξοδος",
+            "prompt": "Εισάγετε την επιλογή σας (1-4): ",
+            "note": "💡 Σημείωση: Εάν το API quota εξαντληθεί, η λειτουργία offline θα ξεκινήσει αυτόματα"
+        }
+    }
 
 def check_api_key():
     """Check if API key is configured and test quota"""
@@ -84,35 +206,71 @@ def print_system_status():
     api_key_valid, api_key = check_api_key()
     return api_key_valid, api_key
 
-def print_mode_options():
-    """Print mode selection options"""
-    print("\n🎯 Choose Your Assistant Mode:")
-    print("1. 💬 Chat Mode - Text-based conversation")
-    print("2. 🎤 Voice Mode - Real-time voice conversation (Advanced)")
-    print("3. 🎭 Combined Mode - Voice + Chat (Advanced)")
-    print("4. ❌ Exit")
-    print()
-    print("💡 Note: If API quota is exceeded, offline mode will start automatically")
-    print()
+def speak_text_robust(text, language_code="en-IN"):
+    """Enhanced TTS function with multilingual support and text cleaning"""
+    try:
+        # Try to import the enhanced TTS module
+        from voice_assistant.audio.enhanced_tts import speak_text_enhanced
+        return speak_text_enhanced(text, language_code)
+    except ImportError:
+        # Fallback to basic implementation if module not available
+        return speak_text_basic(text, language_code)
 
-def get_user_choice():
-    """Get user's mode choice"""
-    while True:
-        try:
-            choice = input("Enter your choice (1-4): ").strip()
-            if choice in ['1', '2', '3', '4']:
-                return int(choice)
+def speak_text_basic(text, language_code="en-IN"):
+    """Basic TTS fallback function"""
+    try:
+        import pyttsx3
+        import re
+        
+        # Basic text cleaning for Hindi
+        cleaned_text = text
+        if language_code == "hi-IN":
+            # Replace problematic characters
+            cleaned_text = cleaned_text.replace('/', ' ')
+            cleaned_text = cleaned_text.replace('\n', ' ')
+            cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
+            cleaned_text = cleaned_text.strip()
+        
+        # Reinitialize engine for each call (Windows fix)
+        engine = pyttsx3.init()
+        
+        # Configure engine
+        engine.setProperty('rate', 120)  # Slower for better clarity
+        engine.setProperty('volume', 1.0)
+        
+        # Set voice if available
+        voices = engine.getProperty('voices')
+        if voices:
+            # Try to find a good voice
+            for voice in voices:
+                if 'female' in voice.name.lower() or 'zira' in voice.name.lower():
+                    engine.setProperty('voice', voice.id)
+                    break
             else:
-                print("❌ Invalid choice. Please enter 1, 2, 3, or 4.")
-        except KeyboardInterrupt:
-            print("\n👋 Goodbye!")
-            return 4
-        except Exception:
-            print("❌ Invalid input. Please enter a number.")
+                engine.setProperty('voice', voices[0].id)
+        
+        # Speak the cleaned text
+        engine.say(cleaned_text)
+        engine.runAndWait()
+        
+        # Cleanup engine (important for Windows)
+        try:
+            engine.stop()
+            del engine
+        except:
+            pass
+        
+        return True
+        
+    except Exception as e:
+        print(f"⚠️  Voice error: {e}")
+        print(f"Text was: {text[:50]}...")
+        return False
 
-def get_npcl_system_instruction():
-    """Get NPCL system instruction"""
-    return """You are a customer service assistant for NPCL (Noida Power Corporation Limited), a power utility company.
+def get_npcl_system_instruction(language_code="en-IN"):
+    """Get NPCL system instruction in specified language"""
+    instructions = {
+        "en-IN": """You are a customer service assistant for NPCL (Noida Power Corporation Limited), a power utility company.
 
 Your role:
 - Help customers with power connection inquiries
@@ -134,15 +292,95 @@ Communication style:
 - Keep responses concise and professional
 
 Sample complaint number format: 0000054321
-Always be ready to help with power-related issues."""
+Always be ready to help with power-related issues.""",
 
-def start_simple_chat_mode(api_key):
-    """Start simple chat mode using direct Gemini API with robust TTS"""
+        "hi-IN": """आप एनपीसीएल (नोएडा पावर कॉर्पोरेशन लिमिटेड) के लिए ग्राहक सेवा सहायक हैं, जो एक पावर यूटिलिटी कंपनी है।
+
+आपकी भूमिका:
+- बिजली कनेक्शन की पूछताछ में ग्राहकों की सहायता करना
+- शिकायत पंजीकरण और स्थिति अपडेट को संभालना
+- पेशेवर ग्राहक सेवा प्रदान करना
+- विनम्र हिंदी संवाद शैली का उपयोग करना
+
+जब ग्राहक आपसे संपर्क करते हैं:
+1. उनका पेशेवर तरीके से स्वागत करें
+2. उनके कनेक्शन विवरण या शिकायत संख्या के लिए पूछें
+3. उनकी बिजली सेवा के बारे में सहायक जानकारी प्रदान करें
+4. आवश्यकता पड़ने पर नई शिकायतें दर्ज करें
+5. मौजूदा शिकायतों पर स्थिति अपडेट दें
+
+संवाद शैली:
+- सम्मानजनक रहें और "सर" या "मैडम" का उपयोग करें
+- हिंदी वाक्यों का प्राकृतिक उपयोग करें
+- स्पष्ट रूप से बोलें और सहायक बनें
+- प्रतिक्रियाओं को संक्षिप्त और पेशेवर रखें
+
+नमूना शिकायत संख्या प्रारूप: 0000054321
+हमेशा बिजली संबंधी समस्याओं में मदद के लिए तैयार रहें।""",
+
+        "bn-IN": """আপনি এনপিসিএল (নোয়েডা পাওয়ার কর্পোরেশন লিমিটেড) এর জন্য একজন গ্রাহক সেবা সহায়ক, যা একটি পাওয়ার ইউটিলিটি কোম্পানি।
+
+আপনার ভূমিকা:
+- বিদ্যুৎ সংযোগের অনুসন্ধানে গ্রাহকদের সাহায্য করা
+- অভিযোগ নিবন্ধন এবং স্থিতি আপডেট পরিচালনা করা
+- পেশাদার গ্রাহক সেবা প্রদান করা
+- ভদ্র বাংলা যোগাযোগ শৈলী ব্যবহার করা
+
+যখন গ্রাহকরা আপনার সাথে যোগাযোগ করেন:
+1. তাদের পেশাদারভাবে স্বাগত জানান
+2. তাদের সংযোগের বিবরণ বা অভিযোগ নম্বর জিজ্ঞাসা করুন
+3. তাদের বিদ্যুৎ সেবা সম্পর্কে সহায়ক তথ্য প্রদান করুন
+4. প্রয়োজনে নতুন অভিযোগ নিবন্ধন করুন
+5. বিদ্যমান অভিযোগের স্থিতি আপডেট দিন
+
+যোগাযোগ শৈলী:
+- সম্মানজনক থাকুন এবং "স্যার" বা "ম্যাডাম" ব্যবহার করুন
+- বাংলা বাক্যাংশ প্রাকৃতিকভাবে ব্যবহার করুন
+- স্পষ্টভাবে কথা বলুন এবং সহায়ক হন
+- প্রতিক্রিয়া সংক্ষিপ্ত এবং পেশাদার রাখুন
+
+নমুনা অভিযোগ নম্বর বিন্যাস: 0000054321
+সর্বদা বিদ্যুৎ সংক্রান্ত সমস্যায় সাহায্যের জন্য প্রস্তুত থাকুন।""",
+
+        "el-GR": """Είστε βοηθός εξυπηρέτησης πελατών για την NPCL (Noida Power Corporation Limited), μια εταιρεία κοινής ωφέλειας ηλεκτρικής ενέργειας.
+
+Ο ρόλος σας:
+- Βοηθήστε τους πελάτες με ερωτήματα σύνδεσης ρεύματος
+- Χειριστείτε την καταχώρηση παραπόνων και ενημερώσεις κατάστασης
+- Παρέχετε επαγγελματική εξυπηρέτηση πελατών
+- Χρησιμοποιήστε ευγενικό ελληνικό στυλ επικοινωνίας
+
+Όταν οι πελάτες επικοινωνούν μαζί σας:
+1. Καλωσορίστε τους επαγγελματικά
+2. Ζητήστε τα στοιχεία σύνδεσής τους ή τον αριθμό παραπόνου
+3. Παρέχετε χρήσιμες πληροφορίες για την υπηρεσία ρεύματός τους
+4. Καταχωρήστε νέα παράπονα εάν χρειάζεται
+5. Δώστε ενημερώσεις κατάστασης για υπάρχοντα παράπονα
+
+Στυλ επικοινωνίας:
+- Να είστε σεβαστοί και να χρησιμοποιείτε "Κύριε" ή "Κυρία"
+- Χρησιμοποιήστε ελληνικές φράσεις φυσικά
+- Μιλήστε καθαρά και να είστε χρήσιμοι
+- Κρατήστε τις απαντήσεις συνοπτικές και επαγγελματικές
+
+Δείγμα μορφής αριθμού παραπόνου: 0000054321
+Να είστε πάντα έτοιμοι να βοηθήσετε με θέματα που σχετίζονται με το ρεύμα."""
+    }
+    
+    return instructions.get(language_code, instructions["en-IN"])
+
+def start_multilingual_chat_mode(api_key, language_config):
+    """Start multilingual chat mode"""
     # Clear terminal for clean conversation interface
     import os
     os.system('cls' if os.name == 'nt' else 'clear')
     
-    print("💬 NPCL Voice Assistant - Chat Mode")
+    lang_code = language_config["code"]
+    lang_name = language_config["native"]
+    flag = language_config["flag"]
+    
+    print(f"💬 NPCL Voice Assistant - Chat Mode")
+    print(f"{flag} Language: {lang_name}")
     print("=" * 40)
     print()
     
@@ -164,126 +402,7 @@ def start_simple_chat_mode(api_key):
         print(f"⚠️  Voice setup failed: {e}")
         print("💬 Continuing with text-only mode...")
     
-    # Initialize speech recognition
-    recognizer = None
-    microphone = None
-    try:
-        import speech_recognition as sr
-        recognizer = sr.Recognizer()
-        microphone = sr.Microphone()
-        
-        # Adjust for ambient noise and improve recognition
-        print("🎤 Calibrating microphone...")
-        with microphone as source:
-            recognizer.adjust_for_ambient_noise(source, duration=2)
-        
-        # Improve recognition settings
-        recognizer.energy_threshold = 300  # Minimum audio energy to consider for recording
-        recognizer.dynamic_energy_threshold = True  # Automatically adjust energy threshold
-        recognizer.pause_threshold = 0.8  # Seconds of non-speaking audio before phrase is complete
-        
-        print("🎤 Voice input enabled")
-        
-        # Speak the setup completion
-        if tts_available:
-            setup_msg = "Voice setup complete. I can now speak and listen."
-            speak_text_robust(setup_msg)
-        
-    except ImportError:
-        print("⚠️  Speech recognition not available. Install: pip install SpeechRecognition")
-        print("💬 Voice input disabled - will use text input")
-    except Exception as e:
-        print(f"⚠️  Microphone setup failed: {e}")
-        print("💬 Voice input disabled - will use text input")
-        recognizer = None
-        microphone = None
-    
     print()
-    
-    def speak_text_robust(text):
-        """Robust TTS function that works on Windows by reinitializing engine"""
-        if not tts_available:
-            print(f"[SILENT] {text}")
-            return False
-        
-        try:
-            import pyttsx3
-            
-            # Reinitialize engine for each call (Windows fix)
-            engine = pyttsx3.init()
-            
-            # Configure engine
-            engine.setProperty('rate', 150)
-            engine.setProperty('volume', 1.0)
-            
-            # Set voice if available
-            voices = engine.getProperty('voices')
-            if voices:
-                # Try to find a good voice
-                for voice in voices:
-                    if 'female' in voice.name.lower() or 'zira' in voice.name.lower():
-                        engine.setProperty('voice', voice.id)
-                        break
-                else:
-                    engine.setProperty('voice', voices[0].id)
-            
-            print("🔊 Speaking...")
-            
-            # Speak the text
-            engine.say(text)
-            engine.runAndWait()
-            
-            # Cleanup engine (important for Windows)
-            try:
-                engine.stop()
-                del engine
-            except:
-                pass
-            
-            print("✅ Speech completed")
-            print()
-            return True
-            
-        except Exception as e:
-            print(f"⚠️  Voice error: {e}")
-            print(f"Text was: {text[:50]}...")
-            return False
-    
-
-    
-    def listen_for_voice():
-        """Listen for voice input and convert to text"""
-        if not recognizer or not microphone:
-            return None
-        
-        try:
-            print("🎤 Listening... (speak now - 15 seconds)")
-            with microphone as source:
-                # Listen for audio with 15 second timeout as requested
-                audio = recognizer.listen(source, timeout=15, phrase_time_limit=15)
-            
-            print("🔄 Processing speech...")
-            # Use Google Speech Recognition
-            text = recognizer.recognize_google(audio)
-            print(f"🎤 You said: {text}")
-            return text
-            
-        except sr.WaitTimeoutError:
-            timeout_msg = "No speech detected after 15 seconds. Please try again."
-            print(f"⏰ {timeout_msg}")
-            return None
-        except sr.UnknownValueError:
-            unclear_msg = "Could not understand your speech clearly. Please try again."
-            print(f"❌ {unclear_msg}")
-            return None
-        except sr.RequestError as e:
-            error_msg = f"Speech recognition service error: {e}"
-            print(f"❌ {error_msg}")
-            return None
-        except Exception as e:
-            general_error_msg = f"Voice input error: {e}"
-            print(f"❌ {general_error_msg}")
-            return None
     
     try:
         import google.generativeai as genai
@@ -300,7 +419,7 @@ def start_simple_chat_mode(api_key):
             if "quota" in str(e).lower() or "429" in str(e):
                 print(f"⚠️  API quota exceeded. Switching to offline mode...")
                 print(f"🔄 Restarting in offline mode...")
-                start_offline_voice_mode()
+                start_offline_mode(language_config)
                 return
             else:
                 print(f"❌ API error: {e}")
@@ -308,36 +427,56 @@ def start_simple_chat_mode(api_key):
         
         # Generate and speak welcome message
         try:
-            system_prompt = get_npcl_system_instruction()
-            welcome_prompt = system_prompt + "\n\nPlease start the conversation by welcoming the customer to NPCL customer service. Introduce yourself as the NPCL voice assistant and ask how you can help them with their power connection today. Be professional and use Indian English style.\n\nAssistant:"
+            system_prompt = get_npcl_system_instruction(lang_code)
+            welcome_messages = get_welcome_messages()
+            welcome_text = welcome_messages.get(lang_code, welcome_messages["en-IN"])
             
-            initial_response = model.generate_content(welcome_prompt)
-            welcome_text = initial_response.text
+            # Add instruction to respond in the selected language
+            language_instruction = f"Please respond in {language_config['name']} language. "
+            if lang_code != "en-IN":
+                language_instruction += f"Always use {language_config['name']} script and vocabulary. "
             
-            print(f"🤖 NPCL Assistant: {welcome_text}")
+            enhanced_prompt = system_prompt + f"\n\n{language_instruction}Please start by welcoming the customer to NPCL customer service in {language_config['name']} language."
+            
+            initial_response = model.generate_content(enhanced_prompt)
+            ai_welcome = initial_response.text
+            
+            print(f"🤖 NPCL Assistant: {ai_welcome}")
             print()
             
             # Speak the welcome message using robust TTS
-            speak_text_robust(welcome_text)
+            if tts_available:
+                speak_text_robust(ai_welcome, lang_code)
             
         except Exception as e:
             if "quota" in str(e).lower() or "429" in str(e):
                 print(f"⚠️  API quota exceeded during welcome. Switching to offline mode...")
-                start_offline_voice_mode()
+                start_offline_mode(language_config)
                 return
             else:
                 print(f"❌ Failed to generate welcome: {e}")
                 # Fallback welcome
-                fallback_welcome = "Namaste! Welcome to NPCL customer service. I am your voice assistant. How may I help you with your power connection today?"
+                welcome_messages = get_welcome_messages()
+                fallback_welcome = welcome_messages.get(lang_code, welcome_messages["en-IN"])
                 print(f"🤖 NPCL Assistant: {fallback_welcome}")
-                speak_text_robust(fallback_welcome)
+                if tts_available:
+                    speak_text_robust(fallback_welcome, lang_code)
         
         while True:
             try:
-                user_input = input("\n👤 You: ").strip()
+                user_input = input(f"\n👤 You ({lang_name}): ").strip()
                 
-                if user_input.lower() in ['quit', 'exit', 'bye', 'goodbye']:
-                    print("👋 Thank you for contacting NPCL. Have a great day!")
+                if user_input.lower() in ['quit', 'exit', 'bye', 'goodbye', 'बाहर निकलें', 'প্রস্থান', 'έξοδος']:
+                    goodbye_messages = {
+                        "en-IN": "Thank you for contacting NPCL. Have a great day!",
+                        "hi-IN": "एनपीसीएल से संपर्क करने के लिए धन्यवाद। आपका दिन शुभ हो!",
+                        "bn-IN": "এনপিসিএল-এর সাথে যোগাযোগ করার জন্য ধন্যবাদ। আপনার দিন শুভ হোক!",
+                        "el-GR": "Ευχαριστούμε που επικοινωνήσατε με την NPCL. Να έχετε μια υπέροχη μέρα!"
+                    }
+                    goodbye_msg = goodbye_messages.get(lang_code, goodbye_messages["en-IN"])
+                    print(f"👋 {goodbye_msg}")
+                    if tts_available:
+                        speak_text_robust(goodbye_msg, lang_code)
                     break
                 
                 if not user_input:
@@ -345,7 +484,12 @@ def start_simple_chat_mode(api_key):
                 
                 # Get AI response with quota check
                 try:
-                    prompt = f"{system_prompt}\n\nUser: {user_input}\nAssistant:"
+                    # Enhanced prompt with language instruction
+                    language_instruction = f"Please respond in {language_config['name']} language only. "
+                    if lang_code != "en-IN":
+                        language_instruction += f"Use {language_config['name']} script and vocabulary. "
+                    
+                    prompt = f"{system_prompt}\n\n{language_instruction}\n\nUser: {user_input}\nAssistant:"
                     response = model.generate_content(prompt)
                     
                     # Display and speak the response
@@ -353,19 +497,27 @@ def start_simple_chat_mode(api_key):
                     print(f"🤖 NPCL Assistant: {response_text}")
                     print()
                     
-                    # Always speak the response using robust TTS - FIXED!
-                    speak_text_robust(response_text)
+                    # Always speak the response using robust TTS
+                    if tts_available:
+                        speak_text_robust(response_text, lang_code)
                     
                 except Exception as e:
                     if "quota" in str(e).lower() or "429" in str(e):
                         print(f"⚠️  API quota exceeded. Switching to offline mode...")
-                        start_offline_voice_mode()
+                        start_offline_mode(language_config)
                         return
                     else:
                         # Fallback response for other errors
-                        fallback_response = "I apologize, but I'm having technical difficulties. Please try again or contact our customer service directly."
+                        error_messages = {
+                            "en-IN": "I apologize, but I'm having technical difficulties. Please try again or contact our customer service directly.",
+                            "hi-IN": "मुझे खेद है, लेकिन मुझे तकनीकी कठिनाइयों का सामना कर रहा हूं। कृपया पुनः प्रयास करें या सीधे हमारी ग्राहक सेवा से संपर्क करें।",
+                            "bn-IN": "আমি দুঃখিত, কিন্তু আমার প্রযুক্তিগত সমস্যা হচ্ছে। অনুগ্রহ করে আবার চেষ্টা করুন বা সরাসরি আমাদের গ্রাহক সেবায় যোগাযোগ করুন।",
+                            "el-GR": "Ζητώ συγγνώμη, αλλά αντιμετωπίζω τεχνικές δυσκολίες. Παρακαλώ δοκιμάστε ξανά ή επικοινωνήστε απευθείας με την εξυπηρέτηση πελατών μας."
+                        }
+                        fallback_response = error_messages.get(lang_code, error_messages["en-IN"])
                         print(f"🤖 NPCL Assistant: {fallback_response}")
-                        speak_text_robust(fallback_response)
+                        if tts_available:
+                            speak_text_robust(fallback_response, lang_code)
                 
             except KeyboardInterrupt:
                 print("\n👋 Chat session ended.")
@@ -380,12 +532,26 @@ def start_simple_chat_mode(api_key):
         print("2. Internet connection")
         print("3. google-generativeai package installed")
 
-def start_offline_voice_mode():
-    """Start voice mode without AI (offline mode for quota exceeded)"""
+def start_offline_mode(language_config):
+    """Start offline mode with multilingual support and voice input"""
+    try:
+        # Try to use enhanced offline voice mode
+        from voice_assistant.modes.voice_mode import start_offline_voice_mode
+        start_offline_voice_mode(language_config)
+        return
+    except ImportError:
+        # Fallback to basic offline mode
+        pass
+    
     import os
     os.system('cls' if os.name == 'nt' else 'clear')
     
-    print("🎙️ NPCL Voice Assistant - Offline Mode")
+    lang_code = language_config["code"]
+    lang_name = language_config["native"]
+    flag = language_config["flag"]
+    
+    print(f"🎙️ NPCL Voice Assistant - Offline Mode")
+    print(f"{flag} Language: {lang_name}")
     print("=" * 40)
     print("⚠️  API quota exceeded - using offline responses")
     print()
@@ -402,151 +568,115 @@ def start_offline_voice_mode():
     except Exception as e:
         print(f"⚠️  Voice setup failed: {e}")
     
-    # Initialize speech recognition
-    recognizer = None
-    microphone = None
-    try:
-        import speech_recognition as sr
-        recognizer = sr.Recognizer()
-        microphone = sr.Microphone()
-        
-        print("🎤 Calibrating microphone...")
-        with microphone as source:
-            recognizer.adjust_for_ambient_noise(source, duration=2)
-        
-        recognizer.energy_threshold = 300
-        recognizer.dynamic_energy_threshold = True
-        recognizer.pause_threshold = 0.8
-        
-        print("🎤 Voice input enabled")
-    except Exception as e:
-        print(f"⚠️  Microphone setup failed: {e}")
-        recognizer = None
-        microphone = None
-    
     print()
     
-    def speak_text_robust(text):
-        """Robust TTS function"""
-        if not tts_available:
-            print(f"[SILENT] {text}")
-            return False
-        
-        try:
-            import pyttsx3
-            engine = pyttsx3.init()
-            engine.setProperty('rate', 150)
-            engine.setProperty('volume', 1.0)
-            
-            voices = engine.getProperty('voices')
-            if voices:
-                for voice in voices:
-                    if 'female' in voice.name.lower() or 'zira' in voice.name.lower():
-                        engine.setProperty('voice', voice.id)
-                        break
-                else:
-                    engine.setProperty('voice', voices[0].id)
-            
-            print("🔊 Speaking...")
-            engine.say(text)
-            engine.runAndWait()
-            
-            try:
-                engine.stop()
-                del engine
-            except:
-                pass
-            
-            print("✅ Speech completed")
-            print()
-            return True
-        except Exception as e:
-            print(f"⚠️  Voice error: {e}")
-            return False
-    
-    def listen_for_voice():
-        """Listen for voice input"""
-        if not recognizer or not microphone:
-            return None
-        
-        try:
-            print("🎤 Listening... (speak now - 15 seconds)")
-            with microphone as source:
-                audio = recognizer.listen(source, timeout=15, phrase_time_limit=15)
-            
-            print("🔄 Processing speech...")
-            text = recognizer.recognize_google(audio)
-            print(f"🎤 You said: {text}")
-            return text
-        except Exception as e:
-            print(f"❌ Listen failed: {e}")
-            return None
-    
-    def get_offline_response(user_input):
-        """Get offline NPCL response (predefined responses)"""
+    def get_offline_response(user_input, lang_code):
+        """Get offline NPCL response in specified language"""
         user_lower = user_input.lower()
         
-        # NPCL offline responses
-        if any(word in user_lower for word in ['hello', 'hi', 'hey', 'namaste']):
-            return "Namaste! Welcome to NPCL customer service. I'm currently in offline mode due to high demand. How can I help you with your power connection today?"
+        # Offline responses in multiple languages
+        responses = {
+            "en-IN": {
+                "greeting": "Namaste! Welcome to NPCL customer service. I'm currently in offline mode due to high demand. How can I help you with your power connection today?",
+                "power": "I understand you're experiencing a power issue. Please note your complaint number: NPCL-OFF-001. Our technical team will address this within 24 hours. Is there anything else I can help with?",
+                "complaint": "I can help register your complaint. Your complaint number is NPCL-OFF-002. Please keep this number for future reference. Our team will contact you within 24 hours.",
+                "bill": "For billing inquiries, please visit our nearest NPCL office or call our billing helpline. Your account details are secure and will be reviewed by our billing team.",
+                "connection": "For new power connections, please visit our customer service center with required documents. The process typically takes 7-10 working days.",
+                "thanks": "You're welcome! Thank you for contacting NPCL. Is there anything else I can assist you with today?",
+                "default": "Thank you for contacting NPCL. I'm currently in offline mode. For immediate assistance, please call our helpline or visit our customer service center. Your query is important to us."
+            },
+            "hi-IN": {
+                "greeting": "नमस्ते! एनपीसीएल ग्राहक सेवा में आपका स्वागत है। मैं वर्तमान में उच्च मांग के कारण ऑफ़लाइन मोड में हूं। आज मैं आपके बिजली कनेक्शन के लिए कैसे सहायता कर सकता हूं?",
+                "power": "मैं समझता हूं कि आप बिजली की समस्या का सामना कर रहे हैं। कृपया अपनी शिकायत संख्या नोट करें: NPCL-OFF-001। हमारी तकनीकी टीम 24 घंटों के भीतर इसका समाधान करेगी।",
+                "complaint": "मैं आपकी शिकायत दर्ज करने में सहायता कर सकता हूं। आपकी शिकायत संख्या है NPCL-OFF-002। कृपया भविष्य के संदर्भ के लिए इस संख्या को रखें।",
+                "bill": "बिलिंग पूछताछ के लिए, कृपया हमारे निकटतम एनपीसीएल कार्यालय में जाएं या हमारी बिलिंग हेल्पलाइन पर कॉल करें।",
+                "connection": "नए बिजली कनेक्शन के लिए, कृपया आवश्यक दस्तावेजों के साथ हमारे ग्राहक सेवा केंद्र में जाएं।",
+                "thanks": "आपका स्वागत है! एनपीसीएल से संपर्क करने के लिए धन्यवाद। क्या आज मैं आपकी कोई और सहायता कर सकता हूं?",
+                "default": "एनपीसीएल से संपर्क करने के लिए धन्यवाद। मैं वर्तमान में ऑफ़लाइन मोड में हूं। तत्काल सहायता के लिए, कृपया हमारी हेल्पलाइन पर कॉल करें।"
+            },
+            "bn-IN": {
+                "greeting": "নমস্কার! এনপিসিএল গ্রাহক সেবায় আপনাকে স্বাগতম। উচ্চ চাহিদার কারণে আমি বর্তমানে অফলাইন মোডে আছি। আজ আপনার বিদ্যুৎ সংযোগের জন্য আমি কীভাবে সাহায্য করতে পারি?",
+                "power": "আমি বুঝতে পারছি আপনি বিদ্যুৎ সমস্যার সম্মুখীন হচ্ছেন। অনুগ্রহ করে আপনার অভিযোগ নম্বর নোট করুন: NPCL-OFF-001। আমাদের প্রযুক্তিগত দল ২৪ ঘন্টার মধ্যে এটি সমাধান করবে।",
+                "complaint": "আমি আপনার অভিযোগ নিবন্ধন করতে সাহায্য করতে পারি। আপনার অভিযোগ নম্বর হল NPCL-OFF-002। ভবিষ্যতের রেফারেন্সের জন্য এই নম্বরটি রাখুন।",
+                "bill": "বিলিং অনুসন্ধানের জন্য, অনুগ্রহ করে আমাদের নিকটতম এনপিসিএল অফিসে যান বা আমাদের বিলিং হেল্পলাইনে কল করুন।",
+                "connection": "নতুন বিদ্যুৎ সংযোগের জন্য, প্রয়োজনীয় কাগজপত্র নিয়ে আমাদের গ্রাহক সেবা কেন্দ্রে যান।",
+                "thanks": "আপনাকে স্বাগতম! এনপিসিএল-এর সাথে যোগাযোগ করার জন্য ধন্যবাদ। আজ আমি আপনার আর কোন সাহায্য করতে পারি?",
+                "default": "এনপিসিএল-এর সাথে যোগাযোগ করার জন্য ধন্যবাদ। আমি বর্তমানে অফলাইন মোডে আছি। তাৎক্ষণিক সহায়তার জন্য, আমাদের হেল্পলাইনে কল করুন।"
+            },
+            "el-GR": {
+                "greeting": "Γεια σας! Καλώς ήρθατε στην εξυπηρέτηση πελατών NPCL. Αυτή τη στιγμή είμαι σε λειτουργία offline λόγω υψηλής ζήτησης. Πώς μπορώ να σας βοηθήσω με τη σύνδεση ρεύματός σας σήμερα;",
+                "power": "Καταλαβαίνω ότι αντιμετωπίζετε πρόβλημα με το ρεύμα. Παρακαλώ σημειώστε τον αριθμό παραπόνου σας: NPCL-OFF-001. Η τεχνική μας ομάδα θα το αντιμετωπίσει εντός 24 ωρών.",
+                "complaint": "Μπορώ να σας βοηθήσω να καταχωρήσετε το παράπονό σας. Ο αριθμός παραπόνου σας είναι NPCL-OFF-002. Παρακαλώ κρατήστε αυτόν τον αριθμό για μελλοντική αναφορά.",
+                "bill": "Για ερωτήματα χρέωσης, παρακαλώ επισκεφθείτε το πλησιέστερο γραφείο NPCL ή καλέστε τη γραμμή βοήθειας χρέωσης.",
+                "connection": "Για νέες συνδέσεις ρεύματος, παρακαλώ επισκεφθείτε το κέντρο εξυπηρέτησης πελατών με τα απαιτούμενα έγγραφα.",
+                "thanks": "Παρακαλώ! Ευχαριστούμε που επικοινωνήσατε με την NPCL. Υπάρχει κάτι άλλο με το οποίο μπορώ να σας βοηθήσω σήμερα;",
+                "default": "Ευχαριστούμε που επικοινωνήσατε με την NPCL. Αυτή τη στιγμή είμαι σε λειτουργία offline. Για άμεση βοήθεια, καλέστε τη γραμμή βοήθειάς μας."
+            }
+        }
         
-        elif any(word in user_lower for word in ['power', 'electricity', 'outage', 'cut']):
-            return "I understand you're experiencing a power issue. Please note your complaint number: NPCL-OFF-001. Our technical team will address this within 24 hours. Is there anything else I can help with?"
+        lang_responses = responses.get(lang_code, responses["en-IN"])
         
-        elif any(word in user_lower for word in ['complaint', 'problem', 'issue']):
-            return "I can help register your complaint. Your complaint number is NPCL-OFF-002. Please keep this number for future reference. Our team will contact you within 24 hours."
+        # Check for greeting words
+        if any(word in user_lower for word in ['hello', 'hi', 'hey', 'namaste', 'नमस्ते', 'নমস্কার', 'γεια']):
+            return lang_responses["greeting"]
         
-        elif any(word in user_lower for word in ['bill', 'payment', 'amount']):
-            return "For billing inquiries, please visit our nearest NPCL office or call our billing helpline. Your account details are secure and will be reviewed by our billing team."
+        elif any(word in user_lower for word in ['power', 'electricity', 'outage', 'cut', 'बिजली', 'বিদ্যুৎ', 'ρεύμα']):
+            return lang_responses["power"]
         
-        elif any(word in user_lower for word in ['connection', 'new', 'apply']):
-            return "For new power connections, please visit our customer service center with required documents. The process typically takes 7-10 working days."
+        elif any(word in user_lower for word in ['complaint', 'problem', 'issue', 'शिकायत', 'অভিযোগ', 'παράπονο']):
+            return lang_responses["complaint"]
         
-        elif any(word in user_lower for word in ['thank', 'thanks']):
-            return "You're welcome! Thank you for contacting NPCL. Is there anything else I can assist you with today?"
+        elif any(word in user_lower for word in ['bill', 'payment', 'amount', 'बिल', 'বিল', 'λογαριασμός']):
+            return lang_responses["bill"]
+        
+        elif any(word in user_lower for word in ['connection', 'new', 'apply', 'कनेक्शन', 'সংযোগ', 'σύνδεση']):
+            return lang_responses["connection"]
+        
+        elif any(word in user_lower for word in ['thank', 'thanks', 'धन्यवाद', 'ধন্যবাদ', 'ευχαριστώ']):
+            return lang_responses["thanks"]
         
         else:
-            return "Thank you for contacting NPCL. I'm currently in offline mode. For immediate assistance, please call our helpline or visit our customer service center. Your query is important to us."
+            return lang_responses["default"]
     
     # Welcome message
-    welcome = "Namaste! Welcome to NPCL customer service. I'm currently in offline mode due to high API usage, but I can still help with basic inquiries. How may I assist you with your power connection today?"
+    welcome_messages = get_welcome_messages()
+    welcome = welcome_messages.get(lang_code, welcome_messages["en-IN"])
+    welcome += " I'm currently in offline mode due to high API usage, but I can still help with basic inquiries."
+    
     print(f"🤖 NPCL Assistant: {welcome}")
     print()
-    speak_text_robust(welcome)
+    if tts_available:
+        speak_text_robust(welcome, lang_code)
     
     # Conversation loop
     while True:
         try:
-            # Get user input
-            user_input = None
-            
-            if recognizer and microphone:
-                user_input = listen_for_voice()
-                
-                if user_input is None:
-                    fallback_msg = "I couldn't understand your speech. Please type your message instead."
-                    print(f"💬 {fallback_msg}")
-                    speak_text_robust(fallback_msg)
-                    user_input = input("🎙️ You: ").strip()
-            else:
-                user_input = input("🎙️ You: ").strip()
+            user_input = input(f"\n👤 You ({lang_name}): ").strip()
             
             if not user_input:
                 continue
                 
-            if user_input.lower() in ['quit', 'exit', 'bye', 'goodbye']:
-                goodbye_msg = "Thank you for contacting NPCL. Have a great day! Please try again later when our AI service is available."
+            if user_input.lower() in ['quit', 'exit', 'bye', 'goodbye', 'बाहर निकलें', 'প্রস্থান', 'έξοδος']:
+                goodbye_messages = {
+                    "en-IN": "Thank you for contacting NPCL. Have a great day! Please try again later when our AI service is available.",
+                    "hi-IN": "एनपीसीएल से संपर्क करने के लिए धन्यवाद। आपका दिन शुभ हो! जब हमारी AI सेवा उपलब्ध हो तो कृपया बाद में पुनः प्रयास करें।",
+                    "bn-IN": "এনপিসিএল-এর সাথে যোগাযোগ করার জন্য ধন্যবাদ। আপনার দিন শুভ হোক! আমাদের AI সেবা উপলব্ধ হলে পরে আবার চেষ্টা করুন।",
+                    "el-GR": "Ευχαριστούμε που επικοινωνήσατε με την NPCL. Να έχετε μια υπέροχη μέρα! Δοκιμάστε ξανά αργότερα όταν η υπηρεσία AI μας είναι διαθέσιμη."
+                }
+                goodbye_msg = goodbye_messages.get(lang_code, goodbye_messages["en-IN"])
                 print(f"👋 {goodbye_msg}")
-                speak_text_robust(goodbye_msg)
+                if tts_available:
+                    speak_text_robust(goodbye_msg, lang_code)
                 break
             
             # Get offline response
-            response_text = get_offline_response(user_input)
+            response_text = get_offline_response(user_input, lang_code)
             print(f"🤖 NPCL Assistant: {response_text}")
             print()
             
             # Speak the response
-            speak_text_robust(response_text)
+            if tts_available:
+                speak_text_robust(response_text, lang_code)
             
         except KeyboardInterrupt:
             print("\n👋 Voice session ended.")
@@ -554,682 +684,63 @@ def start_offline_voice_mode():
         except Exception as e:
             print(f"❌ Error: {e}")
 
-def start_simple_voice_mode(api_key):
-    """Start simple voice mode with robust text-to-speech (Windows fix)"""
-    # Clear terminal for clean conversation interface
-    import os
-    os.system('cls' if os.name == 'nt' else 'clear')
+def print_mode_options(language_config):
+    """Print mode selection options in selected language"""
+    lang_code = language_config["code"]
+    mode_messages = get_mode_selection_messages()
+    messages = mode_messages.get(lang_code, mode_messages["en-IN"])
     
-    print("🎙️ NPCL Voice Assistant")
-    print("=" * 30)
+    print(f"\n{messages['title']}")
+    print(f"1. {messages['chat']}")
+    print(f"2. {messages['voice']}")
+    print(f"3. {messages['combined']}")
+    print(f"4. {messages['exit']}")
     print()
-    
-    # Test TTS availability
-    tts_available = False
-    try:
-        import pyttsx3
-        # Test with a quick initialization
-        test_engine = pyttsx3.init()
-        test_engine.stop()
-        del test_engine
-        tts_available = True
-        print("🔊 Voice output enabled (Robust Mode)")
-        
-    except ImportError:
-        print("⚠️  Text-to-speech not available. Install: pip install pyttsx3")
-        print("💬 Continuing with text-only mode...")
-    except Exception as e:
-        print(f"⚠️  Voice setup failed: {e}")
-        print("💬 Continuing with text-only mode...")
-    
-    # Initialize speech recognition
-    recognizer = None
-    microphone = None
-    try:
-        import speech_recognition as sr
-        recognizer = sr.Recognizer()
-        microphone = sr.Microphone()
-        
-        # Adjust for ambient noise and improve recognition
-        print("🎤 Calibrating microphone...")
-        with microphone as source:
-            recognizer.adjust_for_ambient_noise(source, duration=2)
-        
-        # Improve recognition settings
-        recognizer.energy_threshold = 300  # Minimum audio energy to consider for recording
-        recognizer.dynamic_energy_threshold = True  # Automatically adjust energy threshold
-        recognizer.pause_threshold = 0.8  # Seconds of non-speaking audio before phrase is complete
-        
-        print("🎤 Voice input enabled")
-        
-    except ImportError:
-        print("⚠️  Speech recognition not available. Install: pip install SpeechRecognition")
-        print("💬 Voice input disabled - will use text input")
-    except Exception as e:
-        print(f"⚠️  Microphone setup failed: {e}")
-        print("💬 Voice input disabled - will use text input")
-        recognizer = None
-        microphone = None
-    
+    print(messages['note'])
     print()
+
+def get_user_choice(language_config):
+    """Get user's mode choice in selected language"""
+    lang_code = language_config["code"]
+    mode_messages = get_mode_selection_messages()
+    messages = mode_messages.get(lang_code, mode_messages["en-IN"])
     
-    def speak_text(text):
-        """Speak the given text using TTS"""
-        if tts_engine:
-            try:
-                print("🔊 Speaking...")
-                # Clear any previous speech
-                tts_engine.stop()
-                # Add the text to speech queue
-                tts_engine.say(text)
-                # Wait for speech to complete
-                tts_engine.runAndWait()
-                print("✅ Speech completed")
-                print()
-            except Exception as e:
-                print(f"⚠️  Voice error: {e}")
-                print(f"Text was: {text[:50]}...")
-        else:
-            print("⚠️  TTS engine not available - text only mode")
-    
-    def listen_for_voice():
-        """Listen for voice input and convert to text"""
-        if not recognizer or not microphone:
-            return None
-        
+    while True:
         try:
-            print("🎤 Listening... (speak now - 15 seconds)")
-            with microphone as source:
-                # Listen for audio with 15 second timeout as requested
-                audio = recognizer.listen(source, timeout=15, phrase_time_limit=15)
-            
-            print("🔄 Processing speech...")
-            # Use Google Speech Recognition
-            text = recognizer.recognize_google(audio)
-            print(f"🎤 You said: {text}")
-            return text
-            
-        except sr.WaitTimeoutError:
-            timeout_msg = "No speech detected after 15 seconds. Please try again."
-            print(f"⏰ {timeout_msg}")
-            return None
-        except sr.UnknownValueError:
-            unclear_msg = "Could not understand your speech clearly. Please try again."
-            print(f"❌ {unclear_msg}")
-            return None
-        except sr.RequestError as e:
-            error_msg = f"Speech recognition service error: {e}"
-            print(f"❌ {error_msg}")
-            return None
-        except Exception as e:
-            general_error_msg = f"Voice input error: {e}"
-            print(f"❌ {general_error_msg}")
-            return None
-    
-    try:
-        import google.generativeai as genai
-        
-        # Configure Gemini
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        # Test quota before starting conversation
-        try:
-            # Quick quota test
-            test_response = model.generate_content("test")
-        except Exception as e:
-            if "quota" in str(e).lower() or "429" in str(e):
-                print(f"⚠️  API quota exceeded. Switching to offline mode...")
-                print(f"🔄 Restarting in offline mode...")
-                start_offline_voice_mode()
-                return
+            choice = input(messages['prompt']).strip()
+            if choice in ['1', '2', '3', '4']:
+                return int(choice)
             else:
-                print(f"❌ API error: {e}")
-                return
-        
-        # Generate and speak welcome message
-        try:
-            system_prompt = get_npcl_system_instruction()
-            welcome_prompt = system_prompt + "\n\nPlease start the conversation by welcoming the customer to NPCL customer service. Introduce yourself as the NPCL voice assistant and ask how you can help them with their power connection today. Be professional and use Indian English style.\n\nAssistant:"
-            
-            initial_response = model.generate_content(welcome_prompt)
-            welcome_text = initial_response.text
-            
-            print(f"🤖 NPCL Assistant: {welcome_text}")
-            print()
-            
-            # Speak the welcome message using robust TTS
-            speak_text_robust(welcome_text)
-            
-        except Exception as e:
-            if "quota" in str(e).lower() or "429" in str(e):
-                print(f"⚠️  API quota exceeded during welcome. Switching to offline mode...")
-                start_offline_voice_mode()
-                return
-            else:
-                print(f"❌ Failed to generate welcome: {e}")
-                # Fallback welcome
-                fallback_welcome = "Namaste! Welcome to NPCL customer service. I am your voice assistant. How may I help you with your power connection today?"
-                print(f"🤖 NPCL Assistant: {fallback_welcome}")
-                speak_text_robust(fallback_welcome)
-        
-        # Start conversation loop
-        while True:
-            try:
-                # Get user input - try voice first, fallback to text
-                user_input = None
-                
-                if recognizer and microphone:
-                    # Try voice input
-                    user_input = listen_for_voice()
-                    
-                    if user_input is None:
-                        # Voice failed, ask for text input with spoken message
-                        fallback_msg = "I couldn't understand your speech. Please type your message instead."
-                        print(f"💬 {fallback_msg}")
-                        speak_text_robust(fallback_msg)
-                        user_input = input("🎙️ You: ").strip()
-                else:
-                    # No voice recognition available, use text input
-                    user_input = input("🎤 You: ").strip()
-                
-                if not user_input:
-                    continue
-                    
-                if user_input.lower() in ['quit', 'exit', 'bye', 'goodbye']:
-                    goodbye_msg = "Thank you for contacting NPCL. Have a great day!"
-                    print(f"👋 {goodbye_msg}")
-                    speak_text_robust(goodbye_msg)
-                    break
-                
-                # Get AI response with quota check
-                try:
-                    prompt = f"{system_prompt}\n\nUser: {user_input}\nAssistant:"
-                    response = model.generate_content(prompt)
-                    
-                    # Display and speak the response
-                    response_text = response.text
-                    print(f"🤖 NPCL Assistant: {response_text}")
-                    print()
-                    
-                    # Always speak the response using robust TTS - FIXED!
-                    speak_text_robust(response_text)
-                    
-                except Exception as e:
-                    if "quota" in str(e).lower() or "429" in str(e):
-                        print(f"⚠️  API quota exceeded. Switching to offline mode...")
-                        start_offline_voice_mode()
-                        return
-                    else:
-                        # Fallback response for other errors
-                        fallback_response = "I apologize, but I'm having technical difficulties. Please try again or contact our customer service directly."
-                        print(f"🤖 NPCL Assistant: {fallback_response}")
-                        speak_text_robust(fallback_response)
-                
-            except KeyboardInterrupt:
-                print("\n👋 Voice session ended.")
-                break
-            except Exception as e:
-                print(f"❌ Error: {e}")
-                
-    except Exception as e:
-        print(f"❌ Failed to start voice mode: {e}")
-        print("💡 Please check your internet connection and API key.")
-
-# Advanced mode classes and functions (with import protection)
-class NPCLAssistant:
-    """NPCL Assistant with multiple modes"""
-    
-    def __init__(self):
-        try:
-            from voice_assistant.utils.logger import setup_logger
-            from config.settings import get_settings
-            
-            self.settings = get_settings()
-            self.logger = setup_logger()
-        except ImportError as e:
-            print(f"⚠️  Advanced features unavailable due to import error: {e}")
-            print("🔄 Falling back to simple mode...")
-            raise
-        
-        self.ws = None
-        self.running = False
-        self.setup_complete = False
-        self.is_listening = False
-        self.is_speaking = False
-        self.audio_chunks_received = 0
-        
-        # NPCL specific data
-        self.names = ["dheeraj", "nidhi", "nikunj"]
-        self.complaint_number = "0000054321"
-        self.session_active = False
-        
-    def get_npcl_system_instruction(self):
-        """Get NPCL system instruction"""
-        return get_npcl_system_instruction()
-
-    async def start_voice_mode(self):
-        """Start voice-only mode with WebSocket"""
-        # Clear terminal for clean conversation interface
-        import os
-        os.system('cls' if os.name == 'nt' else 'clear')
-        
-        print("🎤 NPCL Voice Assistant - Voice Mode")
-        print("=" * 50)
-        print("🔊 Initializing voice connection...")
-        print()
-        
-        try:
-            # Check quota first
-            if not await self.check_api_quota():
-                print("❌ API quota exceeded. Falling back to chat mode.")
-                await self.start_chat_mode()
-                return
-                
-            await self.start_websocket_connection()
-            
-        except Exception as e:
-            self.logger.error(f"Voice mode error: {e}")
-            error_msg = str(e)
-            
-            if "Unsupported language code" in error_msg:
-                print("❌ Voice mode failed: Unsupported language configuration")
-                print("💡 The Gemini Live API has limited language support")
-            elif "Live API not available" in error_msg:
-                print("❌ Voice mode failed: Gemini Live API not available")
-                print("💡 Live API is in limited preview - not available for all users")
-            else:
-                print(f"❌ Voice mode failed: {e}")
-            
-            print("🔄 Falling back to chat mode...")
-            await self.start_chat_mode()
-
-    async def start_chat_mode(self):
-        """Start chat-only mode"""
-        print("\n💬 Starting Advanced Chat Mode...")
-        print("Type your messages below. Type 'quit' to exit.")
-        print("-" * 50)
-        
-        try:
-            from voice_assistant.ai.gemini_client import GeminiClient
-            
-            # Initialize chat client
-            client = GeminiClient()
-            
-            # Send initial NPCL welcome message - Bot speaks first
-            system_prompt = self.get_npcl_system_instruction()
-            welcome_message = "Please start the conversation by welcoming the customer to NPCL customer service. Introduce yourself as the NPCL voice assistant and ask how you can help them with their power connection today. Be professional and use Indian English style."
-            initial_response = client.generate_response(welcome_message, system_prompt)
-            print(f"🤖 NPCL Assistant: {initial_response}")
-            print("\n📞 Welcome to NPCL Customer Service! The assistant is ready to help you.")
-            print("💬 You can now type your response or questions about your power connection.")
-            print("-" * 50)
-            
-            while True:
-                try:
-                    user_input = input("\n👤 You: ").strip()
-                    
-                    if user_input.lower() in ['quit', 'exit', 'bye', 'goodbye']:
-                        print("👋 Thank you for contacting NPCL. Have a great day!")
-                        break
-                    
-                    if not user_input:
-                        continue
-                    
-                    # Get AI response with NPCL context
-                    response = client.generate_response(user_input, system_prompt)
-                    print(f"🤖 NPCL Assistant: {response}")
-                    
-                except KeyboardInterrupt:
-                    print("\n👋 Chat session ended.")
-                    break
-                except Exception as e:
-                    print(f"❌ Error: {e}")
-                    
-        except Exception as e:
-            self.logger.error(f"Chat mode error: {e}")
-            print(f"❌ Advanced chat mode failed: {e}")
-            print("🔄 Falling back to simple chat mode...")
-            # Fall back to simple chat
-            api_key_valid, api_key = check_api_key()
-            if api_key_valid:
-                start_simple_chat_mode(api_key)
-
-    async def start_both_mode(self):
-        """Start combined voice + chat mode"""
-        print("\n🎭 Starting Combined Mode...")
-        print("🎤 Voice commands will be processed in real-time")
-        print("💬 You can also type messages")
-        print("Press 'v' for voice, 't' for text, 'q' to quit")
-        
-        try:
-            # Check quota first
-            voice_available = await self.check_api_quota()
-            
-            if voice_available:
-                print("✅ Voice mode available")
-            else:
-                print("⚠️  Voice mode unavailable (quota exceeded), text only")
-            
-            from voice_assistant.ai.gemini_client import GeminiClient
-            client = GeminiClient()
-            
-            # Send initial NPCL welcome message - Bot speaks first
-            system_prompt = self.get_npcl_system_instruction()
-            welcome_message = "Please start the conversation by welcoming the customer to NPCL customer service. Introduce yourself as the NPCL voice assistant and ask how you can help them with their power connection today. Be professional and use Indian English style."
-            initial_response = client.generate_response(welcome_message, system_prompt)
-            print(f"🤖 NPCL Assistant: {initial_response}")
-            print("\n📞 Welcome to NPCL Customer Service! The assistant is ready to help you.")
-            print("💬 Choose voice or text to interact with the assistant.")
-            print("-" * 50)
-            
-            while True:
-                try:
-                    mode_choice = input("\n[V]oice, [T]ext, or [Q]uit: ").strip().lower()
-                    
-                    if mode_choice in ['q', 'quit', 'exit']:
-                        print("👋 Thank you for contacting NPCL!")
-                        break
-                    elif mode_choice in ['v', 'voice'] and voice_available:
-                        print("🎤 Speak now... (implementing voice capture)")
-                        # Here you would implement voice capture
-                        print("⚠️  Voice capture not implemented in this demo")
-                    elif mode_choice in ['t', 'text']:
-                        user_input = input("👤 Type your message: ").strip()
-                        if user_input:
-                            response = client.generate_response(user_input, system_prompt)
-                            print(f"🤖 NPCL Assistant: {response}")
-                    else:
-                        print("❌ Invalid choice or voice unavailable")
-                        
-                except KeyboardInterrupt:
-                    print("\n👋 Session ended.")
-                    break
-                    
-        except Exception as e:
-            self.logger.error(f"Combined mode error: {e}")
-            print(f"❌ Combined mode failed: {e}")
-
-    async def check_api_quota(self):
-        """Check if API quota is available"""
-        try:
-            import google.generativeai as genai
-            
-            genai.configure(api_key=self.settings.google_api_key)
-            model = genai.GenerativeModel(self.settings.gemini_model)
-            
-            # Try a simple request
-            response = model.generate_content("test")
-            return True
-            
-        except Exception as e:
-            error_str = str(e).lower()
-            if "quota" in error_str or "exceeded" in error_str:
-                return False
-            return True
-
-    async def start_websocket_connection(self):
-        """Start WebSocket connection for voice mode"""
-        try:
-            import websockets
-            import websockets.exceptions
-            
-            ws_url = f"{self.settings.gemini_live_api_endpoint}?key={self.settings.google_api_key}"
-            
-            self.ws = await websockets.connect(ws_url)
-            
-            # Setup message - Note: Live API may have limited support with 1.5 Flash
-            live_model = "gemini-1.5-flash"  # Using 1.5 Flash as requested
-            setup_message = {
-                "setup": {
-                    "model": f"models/{live_model}",
-                    "generationConfig": {
-                        "responseModalities": ["AUDIO"],
-                        "temperature": 0.2,
-                        "maxOutputTokens": 256,
-                        "speechConfig": {
-                            "languageCode": "en-US",
-                            "voiceConfig": {
-                                "prebuiltVoiceConfig": {"voiceName": self.settings.gemini_voice}
-                            },
-                        },
-                    },
-                    "system_instruction": {"parts": [{"text": self.get_npcl_system_instruction()}]},
+                error_messages = {
+                    "en-IN": "❌ Invalid choice. Please enter 1, 2, 3, or 4.",
+                    "hi-IN": "❌ गलत विकल्प। कृपया 1, 2, 3, या 4 दर्ज करें।",
+                    "bn-IN": "❌ ভুল পছন্দ। অনুগ্রহ করে 1, 2, 3, বা 4 লিখুন।",
+                    "el-GR": "❌ Λάθος επιλογή. Παρακαλώ εισάγετε 1, 2, 3, ή 4."
                 }
-            }
-            
-            await self.ws.send(json.dumps(setup_message))
-            
-            # Handle messages with timeout and graceful exit
-            try:
-                # Create a task for message handling
-                message_task = asyncio.create_task(self.handle_websocket_messages())
-                
-                # Create a task for user input handling
-                input_task = asyncio.create_task(self.handle_user_input())
-                
-                # Wait for either task to complete
-                done, pending = await asyncio.wait(
-                    [message_task, input_task],
-                    return_when=asyncio.FIRST_COMPLETED
-                )
-                
-                # Cancel pending tasks
-                for task in pending:
-                    task.cancel()
-                    try:
-                        await task
-                    except asyncio.CancelledError:
-                        pass
-                
-            except KeyboardInterrupt:
-                print("\n👋 Voice session ended")
-                if self.ws:
-                    await self.ws.close()
-            except asyncio.CancelledError:
-                print("\n👋 Voice session cancelled")
-                if self.ws:
-                    await self.ws.close()
-            
-        except websockets.exceptions.InvalidStatusCode as e:
-            if e.status_code == 403:
-                raise Exception("API quota exceeded or Live API not available")
-            else:
-                raise Exception(f"WebSocket connection failed: {e}")
-        except websockets.exceptions.ConnectionClosedError as e:
-            if "Unsupported language code" in str(e):
-                raise Exception(f"Unsupported language code 'en-US' for model {self.settings.gemini_live_model}")
-            else:
-                raise Exception(f"WebSocket connection closed: {e}")
-        except Exception as e:
-            if "Unsupported language code" in str(e):
-                raise Exception(f"Unsupported language code for Gemini Live API: {e}")
-            else:
-                raise Exception(f"WebSocket error: {e}")
-
-    async def handle_websocket_messages(self):
-        """Handle WebSocket messages"""
-        try:
-            conversation_started = False
-            
-            async for message in self.ws:
-                response = json.loads(message)
-                
-                if "setupComplete" in response:
-                    # Clear the initialization message and start clean conversation
-                    import os
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    
-                    print("🎤 NPCL Voice Assistant")
-                    print("=" * 30)
-                    print()
-                    
-                    self.setup_complete = True
-                    self.is_listening = False  # Bot will speak first
-                    self.is_speaking = True    # Bot is about to speak
-                    await self.send_trigger_message()
-                    conversation_started = True
-                    
-                elif response.get("serverContent"):
-                    await self.handle_server_content(response["serverContent"])
-                    
-                # Add a small delay to prevent overwhelming the terminal
-                await asyncio.sleep(0.01)
-                
-                # Keep the conversation alive
-                if conversation_started and self.setup_complete:
-                    # Continue processing messages until user interrupts
-                    continue
-                    
+                error_msg = error_messages.get(lang_code, error_messages["en-IN"])
+                print(error_msg)
         except KeyboardInterrupt:
-            print("\n👋 Voice session ended by user")
-            if self.ws:
-                await self.ws.close()
-        except Exception as e:
-            # Import websockets here for exception handling
-            try:
-                import websockets.exceptions
-                if isinstance(e, websockets.exceptions.ConnectionClosed):
-                    print("\n🔌 Connection closed by server")
-                    return
-            except ImportError:
-                pass
-            
-            if "Unsupported language code" in str(e):
-                self.logger.error(f"Language code not supported: {e}")
-                raise Exception(f"Unsupported language code for Gemini Live API")
-            else:
-                self.logger.error(f"WebSocket message error: {e}")
-                print(f"\n❌ Voice session error: {e}")
-
-    async def send_trigger_message(self):
-        """Send trigger message to start conversation with NPCL welcome"""
-        # Send a message that will trigger the bot to speak first with NPCL welcome
-        trigger_message = {
-            "clientContent": {
-                "turns": [{
-                    "role": "user", 
-                    "parts": [{
-                        "text": "Please start the conversation by welcoming me to NPCL customer service and introduce yourself as the NPCL voice assistant. Ask how you can help me with my power connection today."
-                    }]
-                }],
-                "turnComplete": True,
+            goodbye_messages = {
+                "en-IN": "\n👋 Goodbye!",
+                "hi-IN": "\n👋 अलविदा!",
+                "bn-IN": "\n👋 বিদায়!",
+                "el-GR": "\n👋 Αντίο!"
             }
-        }
-        await self.ws.send(json.dumps(trigger_message))
-        
-    async def send_keep_alive(self):
-        """Send keep-alive message to maintain session"""
-        try:
-            # Mark session as active
-            self.session_active = True
-            
-            # In a real implementation, this would:
-            # - Monitor microphone for voice input
-            # - Send audio data when user speaks
-            # - Handle voice activity detection
-            # - Process "quit" voice commands
-            
-            # For now, just maintain the connection
-            self.logger.debug("Voice session is active and ready for input")
-            
-        except Exception as e:
-            self.logger.debug(f"Keep-alive error: {e}")
-
-    async def handle_server_content(self, server_content):
-        """Handle server content"""
-        if server_content.get("modelTurn"):
-            model_turn = server_content["modelTurn"]
-            
-            if model_turn.get("parts"):
-                # Check if this is the start of a response
-                if not self.is_speaking:
-                    self.is_speaking = True
-                    self.is_listening = False
-                    self.audio_chunks_received = 0
-                
-                for part in model_turn["parts"]:
-                    if part.get("inlineData") and "audio/pcm" in part["inlineData"].get("mimeType", ""):
-                        await self.handle_audio_response(part["inlineData"])
-                    elif part.get("text"):
-                        # Show the conversation text cleanly
-                        text_content = part["text"]
-                        if text_content.strip():
-                            print(f"🤖 NPCL Assistant: {text_content}")
-                            print()
-                        
-            # Check if turn is complete
-            if model_turn.get("turnComplete", False):
-                if self.is_speaking:
-                    print("🎤 You: (Speak now or say 'quit' to exit)")
-                    print()
-                    self.is_speaking = False
-                    self.is_listening = True
-                    
-                    # Keep the session alive by sending a keep-alive message
-                    await self.send_keep_alive()
-
-    async def handle_audio_response(self, inline_data):
-        """Handle audio response"""
-        pcm_chunk = base64.b64decode(inline_data["data"])
-        self.audio_chunks_received += 1
-        
-        # Only log occasionally to avoid spam (and only in debug mode)
-        if self.audio_chunks_received % 20 == 1:  # Log every 20th chunk
-            self.logger.debug(f"Processing audio chunk {self.audio_chunks_received} ({len(pcm_chunk)} bytes)")
-        
-        # No visual indicators - keep conversation clean
-        
-        # Here you would play the audio
-        # For now, we simulate audio playback
-        # In a real implementation, you would:
-        # - Convert PCM to playable format (WAV, MP3, etc.)
-        # - Use audio library (pygame, pyaudio, etc.) to play through speakers
-        # - Handle audio buffering and synchronization
-        # - Manage audio device selection
-        
-        # Simulate audio processing delay
-        await asyncio.sleep(0.01)
-        
-    async def handle_user_input(self):
-        """Handle user input during voice session"""
-        try:
-            while True:
-                # Use asyncio to handle input without blocking
-                try:
-                    # Simulate waiting for user input
-                    await asyncio.sleep(1)
-                    
-                    # In a real implementation, you would:
-                    # - Capture microphone input
-                    # - Process voice commands
-                    # - Send audio data to Gemini Live API
-                    # - Handle voice activity detection
-                    
-                    # For now, just keep the session alive
-                    if not self.session_active:
-                        self.session_active = True
-                        
-                        # Simulate a long-running voice session
-                        await asyncio.sleep(30)  # Keep session alive for 30 seconds
-                        
-                        if self.session_active:
-                            print("\n[Session ended - Press Ctrl+C to return to menu]")
-                            break
-                    
-                except asyncio.CancelledError:
-                    break
-                except Exception as e:
-                    self.logger.error(f"User input error: {e}")
-                    break
-                    
-        except KeyboardInterrupt:
-            print("\n👋 Voice session ended by user")
-        except Exception as e:
-            self.logger.error(f"Input handling error: {e}")
+            goodbye_msg = goodbye_messages.get(lang_code, goodbye_messages["en-IN"])
+            print(goodbye_msg)
+            return 4
+        except Exception:
+            error_messages = {
+                "en-IN": "❌ Invalid input. Please enter a number.",
+                "hi-IN": "❌ गलत इनपुट। कृपया एक संख्या दर्ज करें।",
+                "bn-IN": "❌ ভুল ইনপুট। অনুগ্রহ করে একটি সংখ্যা লিখুন।",
+                "el-GR": "❌ Λάθος είσοδος. Παρακαλώ εισάγετε έναν αριθμό."
+            }
+            error_msg = error_messages.get(lang_code, error_messages["en-IN"])
+            print(error_msg)
 
 def main():
-    """Main application entry point"""
+    """Main application entry point with multilingual support"""
     print_banner()
     
     # Check system status
@@ -1243,62 +754,82 @@ def main():
         print("3. Add your Google API key to .env file")
         return 1
     
+    # Language selection first
+    print_language_selection()
+    language_choice = get_language_choice()
+    
+    if language_choice is None:
+        return 1
+    
+    language_config = get_language_config(language_choice)
+    
+    # Clear screen and show selected language
+    import os
+    os.system('cls' if os.name == 'nt' else 'clear')
+    
+    print("=" * 70)
+    print("🌍 NPCL Multilingual Voice Assistant")
+    print("🎆 Powered by Gemini 1.5 Flash")
+    print(f"{language_config['flag']} Selected Language: {language_config['native']}")
+    print("=" * 70)
+    
     print("\n🎆 NPCL Features:")
     print("• Handles power connection inquiries")
     print("• Manages complaint numbers and status")
-    print("• Indian English conversation style")
+    print(f"• {language_config['native']} conversation style")
     print("• Real-time voice or text interaction")
     print("• Professional customer service experience")
     print("• 🆆 Offline mode available when quota exceeded")
     
-    # Show mode options
+    # Show mode options in selected language
     while True:
-        print_mode_options()
-        choice = get_user_choice()
+        print_mode_options(language_config)
+        choice = get_user_choice(language_config)
         
         if choice == 4:  # Exit
-            print("👋 Thank you for using NPCL Voice Assistant!")
+            goodbye_messages = {
+                "en-IN": "👋 Thank you for using NPCL Voice Assistant!",
+                "hi-IN": "👋 एनपीसीएल वॉयस असिस्टेंट का उपयोग करने के लिए धन्यवाद!",
+                "bn-IN": "👋 এনপিসিএল ভয়েস অ্যাসিস্ট্যান্ট ব্যবহার করার জন্য ধন্যবাদ!",
+                "el-GR": "👋 Ευχαριστούμε που χρησιμοποιήσατε τον NPCL Voice Assistant!"
+            }
+            goodbye_msg = goodbye_messages.get(language_config["code"], goodbye_messages["en-IN"])
+            print(goodbye_msg)
             break
         
         try:
-            if choice == 1:  # Chat Only (Simple mode first, advanced fallback)
+            if choice == 1:  # Chat Mode
                 try:
-                    start_simple_chat_mode(api_key)
+                    start_multilingual_chat_mode(api_key, language_config)
                 except Exception as e:
                     if "quota" in str(e).lower() or "429" in str(e):
-                        print("⚠️  API quota exceeded. Starting offline chat mode...")
-                        start_offline_voice_mode()  # Offline mode works for both voice and chat
+                        print("⚠️  API quota exceeded. Starting offline mode...")
+                        start_offline_mode(language_config)
                     else:
                         raise e
-            elif choice == 2:  # Voice Mode - Use simple implementation
+            elif choice == 2:  # Voice Mode
                 try:
-                    start_simple_voice_mode(api_key)
+                    # Use enhanced voice mode with speech recognition
+                    from voice_assistant.modes.voice_mode import start_enhanced_voice_mode
+                    start_enhanced_voice_mode(api_key, language_config)
+                except ImportError:
+                    print("⚠️  Enhanced voice mode not available. Using basic voice mode...")
+                    print("🎤 Voice Mode (Enhanced Chat with Voice Output)")
+                    start_multilingual_chat_mode(api_key, language_config)
                 except Exception as e:
                     if "quota" in str(e).lower() or "429" in str(e):
-                        print("⚠️  API quota exceeded. Starting offline voice mode...")
-                        start_offline_voice_mode()
+                        print("⚠️  API quota exceeded. Starting offline mode...")
+                        start_offline_mode(language_config)
                     else:
                         raise e
             elif choice == 3:  # Combined Mode
                 try:
-                    # Try advanced mode
-                    assistant = NPCLAssistant()
-                    asyncio.run(assistant.start_both_mode())
-                        
-                except ImportError:
-                    print("⚠️  Advanced features not available. Using simple chat mode instead.")
-                    try:
-                        start_simple_chat_mode(api_key)
-                    except Exception as e:
-                        if "quota" in str(e).lower() or "429" in str(e):
-                            print("⚠️  API quota exceeded. Starting offline mode...")
-                            start_offline_voice_mode()
-                        else:
-                            raise e
+                    print("🎭 Combined Mode (Enhanced Chat with Voice)")
+                    start_multilingual_chat_mode(api_key, language_config)
                 except Exception as e:
                     if "quota" in str(e).lower() or "429" in str(e):
                         print("⚠️  API quota exceeded. Starting offline mode...")
-                        start_offline_voice_mode()
+                        start_offline_mode(language_config)
                     else:
                         raise e
                 
@@ -1306,18 +837,32 @@ def main():
             print("\n👋 Session interrupted by user")
         except Exception as e:
             print(f"❌ Error: {e}")
-            print("🔄 Falling back to simple chat mode...")
-            start_simple_chat_mode(api_key)
+            print("🔄 Falling back to offline mode...")
+            start_offline_mode(language_config)
         
         # Ask if user wants to try another mode
         try:
-            again = input("\nWould you like to try another mode? (y/n): ").strip().lower()
-            if again not in ['y', 'yes']:
+            again_messages = {
+                "en-IN": "\nWould you like to try another mode? (y/n): ",
+                "hi-IN": "\nक्या आप कोई और मोड आज़माना चाहते हैं? (y/n): ",
+                "bn-IN": "\nআপনি কি অন্য কোন মোড চেষ্টা করতে চান? (y/n): ",
+                "el-GR": "\nΘα θέλατε να δοκιμάσετε άλλη λειτουργία; (y/n): "
+            }
+            again_msg = again_messages.get(language_config["code"], again_messages["en-IN"])
+            again = input(again_msg).strip().lower()
+            if again not in ['y', 'yes', 'हां', 'হ্যাঁ', 'ναι']:
                 break
         except KeyboardInterrupt:
             break
     
-    print("👋 Thank you for using NPCL Voice Assistant!")
+    goodbye_messages = {
+        "en-IN": "👋 Thank you for using NPCL Voice Assistant!",
+        "hi-IN": "👋 एनपीसीएल वॉयस असिस्टेंट का उपयोग करने के लिए धन्यवाद!",
+        "bn-IN": "👋 এনপিসিএল ভয়েস অ্যাসিস্ট্যান্ট ব্যবহার করার জন্য ধন্যবাদ!",
+        "el-GR": "👋 Ευχαριστούμε που χρησιμοποιήσατε τον NPCL Voice Assistant!"
+    }
+    goodbye_msg = goodbye_messages.get(language_config["code"], goodbye_messages["en-IN"])
+    print(goodbye_msg)
     return 0
 
 if __name__ == "__main__":

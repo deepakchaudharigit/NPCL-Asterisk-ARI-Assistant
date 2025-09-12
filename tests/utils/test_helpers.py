@@ -22,6 +22,8 @@ class PerformanceMonitor:
         self.cpu_usage = []
         self.monitoring = False
         self.monitor_thread = None
+        self.baseline_memory = None
+        self.process = psutil.Process()
     
     def start_monitoring(self):
         """Start performance monitoring."""
@@ -29,6 +31,12 @@ class PerformanceMonitor:
         self.monitoring = True
         self.memory_usage = []
         self.cpu_usage = []
+        
+        # Establish baseline memory usage (test infrastructure overhead)
+        try:
+            self.baseline_memory = self.process.memory_info().rss / 1024 / 1024
+        except Exception:
+            self.baseline_memory = 0
         
         self.monitor_thread = threading.Thread(target=self._monitor_loop)
         self.monitor_thread.daemon = True
@@ -44,16 +52,14 @@ class PerformanceMonitor:
     
     def _monitor_loop(self):
         """Monitor loop running in separate thread."""
-        process = psutil.Process()
-        
         while self.monitoring:
             try:
                 # Memory usage in MB
-                memory_mb = process.memory_info().rss / 1024 / 1024
+                memory_mb = self.process.memory_info().rss / 1024 / 1024
                 self.memory_usage.append(memory_mb)
                 
                 # CPU usage percentage
-                cpu_percent = process.cpu_percent()
+                cpu_percent = self.process.cpu_percent()
                 self.cpu_usage.append(cpu_percent)
                 
                 time.sleep(0.1)  # Sample every 100ms
@@ -64,10 +70,21 @@ class PerformanceMonitor:
         """Get performance metrics."""
         duration = (self.end_time or time.time()) - (self.start_time or time.time())
         
+        # Calculate memory metrics
+        peak_memory = max(self.memory_usage) if self.memory_usage else 0
+        avg_memory = sum(self.memory_usage) / len(self.memory_usage) if self.memory_usage else 0
+        
+        # Calculate memory delta from baseline (actual test usage)
+        peak_memory_delta = peak_memory - (self.baseline_memory or 0)
+        avg_memory_delta = avg_memory - (self.baseline_memory or 0)
+        
         return {
             "duration_seconds": duration,
-            "peak_memory_mb": max(self.memory_usage) if self.memory_usage else 0,
-            "avg_memory_mb": sum(self.memory_usage) / len(self.memory_usage) if self.memory_usage else 0,
+            "peak_memory_mb": peak_memory,
+            "avg_memory_mb": avg_memory,
+            "peak_memory_delta_mb": max(0, peak_memory_delta),  # Memory increase from baseline
+            "avg_memory_delta_mb": max(0, avg_memory_delta),    # Average memory increase
+            "baseline_memory_mb": self.baseline_memory or 0,
             "peak_cpu_percent": max(self.cpu_usage) if self.cpu_usage else 0,
             "avg_cpu_percent": sum(self.cpu_usage) / len(self.cpu_usage) if self.cpu_usage else 0
         }

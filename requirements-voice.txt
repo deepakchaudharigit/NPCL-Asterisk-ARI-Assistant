@@ -1,0 +1,17 @@
+# Voice Input Dependencies
+# Install these for voice recognition functionality
+
+# Speech Recognition (Google Speech API)
+SpeechRecognition>=3.10.0
+
+# Audio input (microphone support)
+pyaudio>=0.2.11
+
+# Alternative audio backends
+# sounddevice>=0.4.6  # Alternative to pyaudio
+# pocketsphinx>=0.1.15  # Offline speech recognition
+
+# Already included in main requirements:
+# pyttsx3>=2.90  # Text-to-speech
+# gtts>=2.4.0    # Google Text-to-speech
+# pygame>=2.5.0  # Audio playback

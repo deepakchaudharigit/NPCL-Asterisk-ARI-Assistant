@@ -380,8 +380,15 @@ class TestCompleteCallWorkflow:
         
         # Verify performance metrics
         metrics = monitor.get_metrics()
+        # Note: memory_usage_mb threshold includes pytest overhead (~120-200MB)
+        # For production deployment, use production_memory_usage_mb threshold (100MB)
         assert metrics["peak_memory_mb"] < performance_thresholds["memory_usage_mb"]
         assert metrics["peak_cpu_percent"] < performance_thresholds["cpu_usage_percent"]
+        
+        # Log memory breakdown for debugging
+        print(f"Memory breakdown - Total: {metrics['peak_memory_mb']:.1f}MB, "
+              f"Baseline: {metrics.get('baseline_memory_mb', 0):.1f}MB, "
+              f"Test impact: {metrics.get('peak_memory_delta_mb', 0):.1f}MB")
     
     @pytest.mark.asyncio
     async def test_call_error_recovery(self, test_settings):

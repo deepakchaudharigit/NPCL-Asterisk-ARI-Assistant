@@ -1,0 +1,11 @@
+# Enhanced TTS Dependencies
+# Install these for better multilingual text-to-speech support
+
+# Google Text-to-Speech (better multilingual support)
+gtts>=2.4.0
+
+# Pygame for audio playback (required for gTTS)
+pygame>=2.5.0
+
+# Basic TTS (already in main requirements)
+pyttsx3>=2.90

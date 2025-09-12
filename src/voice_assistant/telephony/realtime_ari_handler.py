@@ -1,4 +1,6 @@
 """
+Real-time ARI handler optimized for low-latency voice processing, immediate event response, and seamless telephony integration.
+
 Real-time ARI handler with Gemini Live API integration.
 Implements the complete workflow for real-time conversational AI
 with bidirectional audio streaming using Asterisk externalMedia.

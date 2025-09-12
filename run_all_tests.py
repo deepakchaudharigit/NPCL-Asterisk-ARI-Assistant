@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """
+Comprehensive test runner script with dependency checking, auto-installation, and multiple test execution modes including unit, integration, performance, and end-to-end testing.
+
 Simple script to run all tests for the Voice Assistant project.
 This script provides an easy way to execute different test categories.
 """

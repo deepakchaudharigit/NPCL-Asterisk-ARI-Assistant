@@ -1,0 +1,35 @@
+{
+  "voice_test": "This is a voice test in English. Can you hear me clearly?",
+  "start_listening": "I'm ready to listen. Please speak now.",
+  "stop_listening": "I've stopped listening. Processing your request.",
+  "speech_not_clear": "I couldn't understand that clearly. Could you please repeat?",
+  "speech_timeout": "I didn't hear anything. Please try speaking again.",
+  "language_switch": "You can switch languages by saying 'change language' or 'भाषा बदलें'",
+  "voice_commands": {
+    "help": "Say 'help' for assistance",
+    "repeat": "Say 'repeat' to hear the last response again",
+    "louder": "Say 'louder' to increase volume",
+    "softer": "Say 'softer' to decrease volume",
+    "slower": "Say 'slower' for slower speech",
+    "faster": "Say 'faster' for faster speech"
+  },
+  "conversation_starters": [
+    "How can I help you today?",
+    "What can I assist you with?",
+    "How may I help you with your power connection?",
+    "What would you like to know about NPCL services?"
+  ],
+  "acknowledgments": [
+    "I understand",
+    "Got it",
+    "I see",
+    "Understood",
+    "Let me help you with that"
+  ],
+  "clarifications": [
+    "Could you please clarify?",
+    "Can you provide more details?",
+    "I need a bit more information",
+    "Could you be more specific?"
+  ]
+}

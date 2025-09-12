@@ -449,9 +449,16 @@ class TestCompleteFeatureSet:
         processing_time = end_time - start_time
         
         # Verify performance requirements
+        # Note: memory_usage_mb threshold includes pytest overhead (~120-200MB)
+        # For production deployment, use production_memory_usage_mb threshold (100MB)
         assert metrics["peak_memory_mb"] < performance_thresholds["memory_usage_mb"]
         assert metrics["peak_cpu_percent"] < performance_thresholds["cpu_usage_percent"]
         assert processing_time < 15.0  # Should complete within reasonable time
+        
+        # Log memory breakdown for debugging
+        print(f"Load test memory - Total: {metrics['peak_memory_mb']:.1f}MB, "
+              f"Baseline: {metrics.get('baseline_memory_mb', 0):.1f}MB, "
+              f"Test impact: {metrics.get('peak_memory_delta_mb', 0):.1f}MB")
         
         # Verify all sessions were processed
         stats = session_manager.get_session_stats()

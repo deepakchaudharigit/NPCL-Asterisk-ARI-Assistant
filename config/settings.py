@@ -1,4 +1,6 @@
 """
+Centralized configuration management using Pydantic for environment variables, API keys, audio settings, telephony parameters, and application behavior control.
+
 Configuration settings for Voice Assistant with Gemini 1.5 Flash
 """
 

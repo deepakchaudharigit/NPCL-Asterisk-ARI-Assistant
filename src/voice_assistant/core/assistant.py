@@ -1,4 +1,6 @@
 """
+Main voice assistant orchestrator coordinating AI, audio, telephony components for complete conversation management and user interaction.
+
 Main Voice Assistant class
 """
 

@@ -1,4 +1,6 @@
 """
+FastAPI server for handling Asterisk ARI events with Gemini Live API integration. Provides HTTP endpoints for ARI events and WebSocket support for external media.
+
 FastAPI server for handling Asterisk ARI events with Gemini Live API integration.
 This server provides HTTP endpoints for ARI events and WebSocket support for external media.
 """

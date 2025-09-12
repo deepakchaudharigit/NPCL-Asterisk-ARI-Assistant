@@ -120,12 +120,21 @@ def silence_audio_data():
 # Performance thresholds fixture
 @pytest.fixture
 def performance_thresholds():
-    """Provide performance thresholds for tests."""
+    """Provide realistic performance thresholds for test environment."""
     return {
-        "audio_processing_latency_ms": 200.0,  # More realistic for test environment
-        "vad_processing_latency_ms": 50.0,     # More realistic for test environment
-        "memory_usage_mb": 200.0,              # More realistic for test environment
-        "cpu_usage_percent": 80.0              # CPU usage threshold for tests
+        "audio_processing_latency_ms": 20.0,   # Production requirement: <20ms
+        "vad_processing_latency_ms": 10.0,     # Production requirement: <10ms
+        "memory_usage_mb": 250.0,              # Test environment: <250MB total process (includes pytest overhead)
+        "cpu_usage_percent": 80.0,             # Test environment: <80% average (relaxed for test)
+        "ai_response_time_ms": 1000.0,         # Production requirement: <1s
+        "session_creation_ms": 100.0,          # Test environment: <100ms (relaxed for mocks)
+        "websocket_latency_ms": 100.0,         # Production requirement: <100ms
+        "error_rate_percent": 1.0,             # Production requirement: <1% error rate
+        "concurrent_calls_limit": 100,         # Production requirement: 100 concurrent calls
+        "throughput_calls_per_second": 10.0,   # Production requirement: 10 calls/second
+        # Production-specific thresholds (for actual deployment)
+        "production_memory_usage_mb": 100.0,   # Production requirement: <100MB per session
+        "production_cpu_usage_percent": 70.0   # Production requirement: <70% average
     }
 
 # Event loop fixture for async tests

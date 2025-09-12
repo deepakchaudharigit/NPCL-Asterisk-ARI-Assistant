@@ -1,0 +1,21 @@
+{
+  "npcl_greeting": "Namaste! Welcome to NPCL customer service. I am your voice assistant. How may I help you with your power connection today?",
+  "power_outage": "I understand you're experiencing a power outage. Let me help you with that.",
+  "bill_inquiry": "I can help you with your electricity bill inquiry.",
+  "new_connection": "For a new power connection, I'll guide you through the process.",
+  "complaint_registration": "I'll help you register your complaint. Please provide the details.",
+  "complaint_status": "Let me check the status of your complaint.",
+  "customer_number": "Please provide your customer number",
+  "connection_number": "Please provide your connection number",
+  "complaint_number": "Your complaint number is {complaint_number}",
+  "service_areas": "NPCL serves Noida, Greater Noida, Ghaziabad, Faridabad, and Gurugram",
+  "office_hours": "Our office hours are 9 AM to 6 PM, Monday to Saturday",
+  "emergency_number": "For emergencies, please call our 24/7 helpline",
+  "bill_payment": "You can pay your bill online, at our offices, or through authorized centers",
+  "load_enhancement": "For load enhancement requests, please visit our nearest office",
+  "meter_reading": "Meter readings are taken monthly between 1st to 5th of each month",
+  "power_cut_schedule": "Scheduled power cuts are announced 24 hours in advance",
+  "tariff_rates": "Current tariff rates are available on our website and offices",
+  "subsidy_schemes": "Various subsidy schemes are available for eligible customers",
+  "solar_connection": "We also facilitate solar power connections and net metering"
+}

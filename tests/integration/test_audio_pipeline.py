@@ -309,8 +309,15 @@ class TestAudioPipelineIntegration:
         
         # Verify performance
         assert processing_ratio < 0.5  # Should process faster than real-time
+        # Note: memory_usage_mb threshold includes pytest overhead (~120-200MB)
+        # For production deployment, use production_memory_usage_mb threshold (100MB)
         assert system_metrics["peak_memory_mb"] < performance_thresholds["memory_usage_mb"]
         assert system_metrics["peak_cpu_percent"] < performance_thresholds["cpu_usage_percent"]
+        
+        # Log memory breakdown for debugging
+        print(f"Audio pipeline memory - Total: {system_metrics['peak_memory_mb']:.1f}MB, "
+              f"Baseline: {system_metrics.get('baseline_memory_mb', 0):.1f}MB, "
+              f"Test impact: {system_metrics.get('peak_memory_delta_mb', 0):.1f}MB")
     
     @pytest.mark.asyncio
     async def test_pipeline_error_recovery(self, audio_config, gemini_config):

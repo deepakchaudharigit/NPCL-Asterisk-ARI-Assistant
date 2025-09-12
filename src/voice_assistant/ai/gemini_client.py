@@ -1,4 +1,6 @@
 """
+Standard Gemini AI client for text-based conversations, response generation, and basic AI interaction without real-time voice capabilities.
+
 Gemini 1.5 Flash client for voice assistant
 """
 
