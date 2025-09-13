@@ -32,7 +32,7 @@ class VoiceInputHandler:
             "kn-IN": "kn-IN",
             "or-IN": "or-IN",
             "ml-IN": "ml-IN",
-            "el-GR": "el-GR"
+            "bho-IN": "hi-IN"
         }
     
     def initialize_microphone(self) -> bool:

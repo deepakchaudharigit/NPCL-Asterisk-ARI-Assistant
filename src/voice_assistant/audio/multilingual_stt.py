@@ -1,6 +1,6 @@
 """
 Enhanced Speech-to-Text with multi-language support for NPCL Voice Assistant
-Supports all Indian regional languages plus Greek and English
+Supports all Indian regional languages plus Bhojpuri and English
 """
 
 import logging
@@ -31,7 +31,7 @@ class MultilingualSTT:
             SupportedLanguage.KANNADA: "kn-IN",
             SupportedLanguage.ODIA: "or-IN",
             SupportedLanguage.MALAYALAM: "ml-IN",
-            SupportedLanguage.GREEK: "el-GR",
+            SupportedLanguage.BHOJPURI: "hi-IN",
         }
         
         # Initialize microphone
@@ -241,7 +241,7 @@ class MultilingualSTT:
             script_confidence = 0.5
         elif language.script == "malayalam" and any('\\u0D00' <= char <= '\\u0D7F' for char in text):
             script_confidence = 0.5
-        elif language.script == "greek" and any('\\u0370' <= char <= '\\u03FF' for char in text):
+        elif language.script == "devanagari" and any('\\u0900' <= char <= '\\u097F' for char in text):
             script_confidence = 0.5
         elif language.script == "latin" and all(ord(char) < 256 for char in text):
             script_confidence = 0.3  # Lower confidence for Latin script as it's common
@@ -270,7 +270,7 @@ class MultilingualSTT:
             SupportedLanguage.KANNADA: ['ಇದೆ', 'ಇವೆ', 'ಈ', 'ಆ', 'ಮತ್ತು', 'ಆದರೆ', 'ಏಕೆಂದರೆ'],
             SupportedLanguage.ODIA: ['ଅଛି', 'ଅଛନ୍ତି', 'ଏହି', 'ସେହି', 'ଏବଂ', 'କିନ୍ତୁ', 'କାରଣ'],
             SupportedLanguage.MALAYALAM: ['ഉണ്ട്', 'ഉണ്ടായിരുന്നു', 'ഇത്', 'അത്', 'ഒപ്പം', 'എന്നാൽ'],
-            SupportedLanguage.GREEK: ['είναι', 'ήταν', 'αυτό', 'εκείνο', 'και', 'αλλά', 'επειδή'],
+            SupportedLanguage.BHOJPURI: ['बा', 'बानी', 'बाटे', 'करेला', 'होखे', 'रहल', 'जाला', 'रउआ', 'हमार'],
             SupportedLanguage.ENGLISH: ['is', 'are', 'the', 'and', 'or', 'but', 'this', 'that', 'with']
         }
         

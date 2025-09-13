@@ -107,7 +107,7 @@ def speak_with_gtts(text: str, language_code: str = "en-IN") -> bool:
             "kn-IN": "kn",
             "or-IN": "or",
             "ml-IN": "ml",
-            "el-GR": "el"
+            "bho-IN": "hi"
         }
         
         gtts_lang = gtts_lang_map.get(language_code, "en")

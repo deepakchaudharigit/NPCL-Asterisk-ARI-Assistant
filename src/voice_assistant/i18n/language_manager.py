@@ -24,7 +24,7 @@ class SupportedLanguage(Enum):
     KANNADA = ("kn-IN", "ಕನ್ನಡ", "Kannada", "ltr", "kannada", True, True, "🇮🇳")
     ODIA = ("or-IN", "ଓଡ଼ିଆ", "Odia", "ltr", "odia", True, True, "🇮🇳")
     MALAYALAM = ("ml-IN", "മലയാളം", "Malayalam", "ltr", "malayalam", True, True, "🇮🇳")
-    GREEK = ("el-GR", "Ελληνικά", "Greek", "ltr", "greek", True, True, "🇬🇷")
+    BHOJPURI = ("bho-IN", "भोजपुरी", "Bhojpuri", "ltr", "devanagari", True, True, "🇮🇳")
     
     def __init__(self, code: str, native_name: str, english_name: str, 
                  direction: str, script: str, voice_support: bool, chat_support: bool, flag: str):
@@ -158,11 +158,14 @@ class LanguageManager:
         
         # Check for specific script patterns
         if any('\\u0900' <= char <= '\\u097F' for char in text):  # Devanagari
-            # Could be Hindi or Marathi, check for specific words
-            hindi_words = ['है', 'हैं', 'का', 'की', 'के', 'में', 'से', 'को', 'और']
+            # Could be Hindi, Marathi, or Bhojpuri, check for specific words
+            bhojpuri_words = ['बा', 'बानी', 'बाटे', 'करेला', 'होखे', 'रहल', 'जाला', 'रउआ', 'हमार', 'तोहार']
             marathi_words = ['आहे', 'आहेत', 'चा', 'ची', 'चे', 'मध्ये', 'पासून', 'ला', 'आणि']
+            hindi_words = ['है', 'हैं', 'का', 'की', 'के', 'में', 'से', 'को', 'और']
             
-            if any(word in text for word in marathi_words):
+            if any(word in text for word in bhojpuri_words):
+                return SupportedLanguage.BHOJPURI
+            elif any(word in text for word in marathi_words):
                 return SupportedLanguage.MARATHI
             return SupportedLanguage.HINDI
             
@@ -182,8 +185,7 @@ class LanguageManager:
             return SupportedLanguage.ODIA
         elif any('\\u0D00' <= char <= '\\u0D7F' for char in text):  # Malayalam
             return SupportedLanguage.MALAYALAM
-        elif any('\\u0370' <= char <= '\\u03FF' for char in text):  # Greek
-            return SupportedLanguage.GREEK
+
         else:
             return SupportedLanguage.ENGLISH
     

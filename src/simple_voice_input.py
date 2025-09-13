@@ -91,13 +91,25 @@ class SimpleVoiceInput:
                 return text, 'success'
                 
             except sr.UnknownValueError:
-                # Try with English if Hindi fails
+                # Try with Hindi if Bhojpuri fails (since Bhojpuri uses Hindi models)
+                if language_code == "bho-IN":
+                    try:
+                        text = self.recognizer.recognize_google(audio, language="hi-IN")
+                        print(f"✅ Recognized (Hindi for Bhojpuri): {text}")
+                        return text, 'success'
+                    except sr.UnknownValueError:
+                        pass
+                
+                # Try with English as final fallback
                 try:
                     text = self.recognizer.recognize_google(audio, language="en-IN")
                     print(f"✅ Recognized (English): {text}")
                     return text, 'success'
                 except sr.UnknownValueError:
-                    print("🔇 Could not understand audio in Hindi or English")
+                    if language_code == "bho-IN":
+                        print("🔇 Could not understand audio in Bhojpuri, Hindi or English")
+                    else:
+                        print("🔇 Could not understand audio in Hindi or English")
                     return None, 'no_speech'
                 
             except sr.RequestError as e:
@@ -131,6 +143,13 @@ class SimpleVoiceInput:
                 "error": "❌ वॉयस त्रुटि। चैट मोड में स्विच कर रहे हैं...",
                 "unavailable": "⚠️  वॉयस इनपुट उपलब्ध नहीं। चैट मोड का उपयोग कर रहे हैं...",
                 "chat_prompt": "💬 अपना संदेश टाइप करें: "
+            },
+            "bho-IN": {
+                "timeout": "⏰ कवनो आवाज नाहीं मिलल। चैट मोड में स्विच कर रहल बानी...",
+                "no_speech": "🔇 समझ नाहीं आइल। चैट मोड में स्विच कर रहल बानी...",
+                "error": "❌ वॉयस त्रुटि। चैट मोड में स्विच कर रहल बानी...",
+                "unavailable": "⚠️  वॉयस इनपुट उपलब्ध नाहीं। चैट मोड के उपयोग कर रहल बानी...",
+                "chat_prompt": "💬 अपना संदेश टाइप करीं: "
             }
         }
         

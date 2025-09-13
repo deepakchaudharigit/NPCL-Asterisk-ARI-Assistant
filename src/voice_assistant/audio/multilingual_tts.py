@@ -1,6 +1,6 @@
 """
 Enhanced Text-to-Speech with multi-language support for NPCL Voice Assistant
-Supports all Indian regional languages plus Greek and English
+Supports all Indian regional languages plus Bhojpuri and English
 """
 
 import logging
@@ -45,7 +45,7 @@ class MultilingualTTS:
             SupportedLanguage.KANNADA: {"lang": "kn", "tld": "com", "slow": False},
             SupportedLanguage.ODIA: {"lang": "or", "tld": "com", "slow": False},
             SupportedLanguage.MALAYALAM: {"lang": "ml", "tld": "com", "slow": False},
-            SupportedLanguage.GREEK: {"lang": "el", "tld": "com", "slow": False},
+            SupportedLanguage.BHOJPURI: {"lang": "hi", "tld": "co.in", "slow": False},
         }
         
         # Voice settings
@@ -167,7 +167,7 @@ class MultilingualTTS:
                 SupportedLanguage.KANNADA: "ಇದು ಕನ್ನಡದಲ್ಲಿ ಧ್ವನಿ ಪರೀಕ್ಷೆ",
                 SupportedLanguage.ODIA: "ଏହା ଓଡ଼ିଆରେ ସ୍ୱର ପରୀକ୍ଷା",
                 SupportedLanguage.MALAYALAM: "ഇത് മലയാളത്തിൽ ശബ്ദ പരിശോധന",
-                SupportedLanguage.GREEK: "Αυτή είναι μια δοκιμή φωνής στα ελληνικά"
+                SupportedLanguage.BHOJPURI: "ई भोजपुरी में एगो आवाज परीक्षण बा"
             }
             test_text = test_texts.get(language, "Voice test")
         
